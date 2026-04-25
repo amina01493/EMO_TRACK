@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Medical Info - {{ child.name }}{% endblock %}
+{% block content %}
+  <h2>{{ child.name }} - المعلومات الطبية</h2>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-header bg-danger text-white fw-bold">
+          🦠 الأمراض
+        </div>
+        <div class="card-body">
+          {% if child.diseases %}
+            <div class="list-group">
+              {% for disease in child.diseases %}
+                <div class="list-group-item d-flex justify-content-between align-items-start">
+                  <div>
+                    <h6 class="mb-1 fw-bold">{{ disease.name }}</h6>
+                    <p class="text-muted small mb-0">{{ disease.description }}</p>
+                  </div>
+                  <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="delete_disease">
+                    <input type="hidden" name="disease_id" value="{{ disease.id }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف المرض؟')">×</button>
+                  </form>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-3">لا توجد أمراض مسجلة</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-info text-white fw-bold">➕ إضافة مرض جديد</div>
+        <form method="post" class="card-body">
+          <input type="hidden" name="action" value="add_disease">
+          <div class="mb-3">
+            <label class="form-label fw-bold">اسم المرض</label>
+            <input class="form-control" name="disease_name" placeholder="مثلاً: الربو" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">الوصف</label>
+            <textarea class="form-control" name="description" placeholder="شرح تفصيلي" rows="2"></textarea>
+          </div>
+          <button class="btn btn-primary w-100 fw-bold" type="submit">إضافة المرض</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card mb-3">
+        <div class="card-header bg-success text-white fw-bold">
+          💊 الأدوية
+        </div>
+        <div class="card-body">
+          {% if child.medications %}
+            <div class="list-group">
+              {% for med in child.medications %}
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-2 fw-bold">{{ med.name }}</h6>
+                      <div class="small text-muted">
+                        {% if med.dosage %}<span>💉 الجرعة: {{ med.dosage }}</span><br>{% endif %}
+                        {% if med.frequency %}<span>⏱️ التكرار: {{ med.frequency }}</span><br>{% endif %}
+                        {% if med.duration_days %}<span>📅 المدة: {{ med.duration_days }} يوم</span><br>{% endif %}
+                        {% if med.schedule_time %}<span>🕐 الموعد: {{ med.schedule_time }}</span>{% endif %}
+                      </div>
+                    </div>
+                    <form method="post" style="display:inline;">
+                      <input type="hidden" name="action" value="delete_medication">
+                      <input type="hidden" name="med_id" value="{{ med.id }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف الدواء؟')">×</button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-3">لا توجد أدوية مسجلة</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header bg-info text-white fw-bold">➕ إضافة دواء جديد</div>
+        <form method="post" class="card-body">
+          <input type="hidden" name="action" value="add_medication">
+          <div class="mb-3">
+            <label class="form-label fw-bold">اسم الدواء</label>
+            <input class="form-control" name="med_name" placeholder="مثلاً: الباراسيتامول" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">الجرعة</label>
+            <input class="form-control" name="dosage" placeholder="مثلاً: 500mg">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">التكرار</label>
+            <input class="form-control" name="frequency" placeholder="مثلاً: كل 8 ساعات">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">مدة الجرعة (بالأيام)</label>
+            <input class="form-control" name="duration_days" type="number" min="1" placeholder="10">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">موعد الجرعة</label>
+            <input class="form-control" name="schedule_time" type="time">
+          </div>
+          <button class="btn btn-primary w-100 fw-bold" type="submit">إضافة الدواء</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-secondary" href="{{ url_for('dashboard', child_id=child.id) }}">← العودة للتطبيق</a>
+  </div>
+
+  <style>
+    .card-header {
+      border-radius: 8px 8px 0 0;
+    }
+    .list-group-item {
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #dee2e6;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #5faee9 0%, #5b7fa3 100%);
+      border: none;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+  </style>
+{% endblock %}
+

@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - {{ active_child.name if active_child else 'Guardian' }}{% endblock %}
+{% block content %}
+  <style>
+    :root {
+      {% if active_child %}
+        {% if active_child.gender == 'boy' %}
+          --theme-color: #0d6efd;
+        {% elif active_child.gender == 'girl' %}
+          --theme-color: #ec4899;
+        {% else %}
+          --theme-color: #5faee9;
+        {% endif %}
+      {% else %}
+        --theme-color: #667eea;
+      {% endif %}
+    }
+    
+    .btn-theme {
+      background: var(--theme-color) !important;
+      border-color: var(--theme-color) !important;
+      color: white !important;
+    }
+    
+    .badge-theme {
+      background: var(--theme-color);
+      color: white;
+    }
+    
+    .text-theme {
+      color: var(--theme-color);
+    }
+    
+    .child-btn {
+      display: inline-block;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 8px;
+      background: #f0f0f0;
+      text-decoration: none;
+      color: #333;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .child-btn:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+    
+    .child-btn.active {
+      background: var(--theme-color);
+      color: white;
+      border-color: var(--theme-color);
+    }
+  </style>
+
+  <div class="dashboard-container pt-4">
+    <h2 class="fw-bold mb-4">التطبيق الرئيسي</h2>
+
+    <!-- Child Selector -->
+    {% if children %}
+      <div class="mb-4">
+        <h5 class="text-muted mb-3">اختر الطفل:</h5>
+        <div class="child-selector">
+          {% for child in children %}
+            <a href="{{ url_for('dashboard', child_id=child.id) }}" 
+               class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %}">
+              {% if child.gender == 'boy' %}👦{% else %}👧{% endif %} {{ child.name }}
+            </a>
+          {% endfor %}
+          <a href="{{ url_for('add_child') }}" class="child-btn">
+            ➕ إضافة طفل
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if active_child %}
+      <!-- Child Status Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
+              <h6 class="text-muted">الحالة</h6>
+              <p class="text-theme fw-bold" style="font-size: 1.5rem;">آمن</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">❤️</div>
+              <h6 class="text-muted">معدل النبض</h6>
+              <p class="text-theme fw-bold" style="font-size: 1.5rem;">85 BPM</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <div style="font-size: 2.5rem; margin-bottom: 10px;">🔋</div>
+              <h6 class="text-muted">البطارية</h6>
+              <p class="text-theme fw-bold" style="font-size: 1.5rem;">85%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active text-theme fw-bold" href="#medical" data-bs-toggle="tab">
+            🏥 المعلومات الطبية
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-theme fw-bold" href="#locations" data-bs-toggle="tab">
+            📍 المناطق الآمنة
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-theme fw-bold" href="#info" data-bs-toggle="tab">
+            ℹ️ معلومات الطفل
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Medical Tab -->
+        <div class="tab-pane fade show active" id="medical">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">🏥 المعلومات الطبية</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="fw-bold mb-3">الأمراض ({{ active_child.diseases|length }})</h6>
+                  {% if active_child.diseases %}
+                    <ul class="list-unstyled">
+                      {% for disease in active_child.diseases %}
+                        <li class="mb-2 p-2 bg-light rounded">
+                          <strong>{{ disease.name }}</strong>
+                          <p class="small text-muted mb-0">{{ disease.description }}</p>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">لا توجد أمراض مسجلة</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <h6 class="fw-bold mb-3">الأدوية ({{ active_child.medications|length }})</h6>
+                  {% if active_child.medications %}
+                    <ul class="list-unstyled">
+                      {% for med in active_child.medications %}
+                        <li class="mb-2 p-2 bg-light rounded">
+                          <strong>{{ med.name }}</strong>
+                          <p class="small text-muted mb-0">
+                            {% if med.dosage %}الجرعة: {{ med.dosage }} | {% endif %}
+                            {% if med.frequency %}التكرار: {{ med.frequency }}{% endif %}
+                          </p>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">لا توجد أدوية مسجلة</p>
+                  {% endif %}
+                </div>
+              </div>
+              <a class="btn btn-theme mt-3" href="{{ url_for('child_medical', child_id=active_child.id) }}">
+                ✏️ تحديث المعلومات الطبية
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locations Tab -->
+        <div class="tab-pane fade" id="locations">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">📍 المناطق الآمنة</h5>
+            </div>
+            <div class="card-body">
+              {% if active_child.locations %}
+                <div class="row">
+                  {% for loc in active_child.locations %}
+                    <div class="col-md-6 mb-3">
+                      <div class="p-3 border rounded">
+                        <h6 class="fw-bold">{{ loc.name }}</h6>
+                        <small class="text-muted">
+                          📍 خط العرض: {{ loc.latitude }}<br>
+                          📍 خط الطول: {{ loc.longitude }}<br>
+                          📏 نصف القطر: {{ loc.radius }} م
+                        </small>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted">لا توجد مناطق آمنة مسجلة</p>
+              {% endif %}
+              <a class="btn btn-theme mt-3" href="{{ url_for('child_locations', child_id=active_child.id) }}">
+                📍 إدارة المناطق الآمنة
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Tab -->
+        <div class="tab-pane fade" id="info">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">ℹ️ معلومات الطفل</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">الاسم</h6>
+                  <p class="fw-bold">{{ active_child.name }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">النوع</h6>
+                  <p class="fw-bold">
+                    {% if active_child.gender == 'boy' %}👦 ذكر{% else %}👧 أنثى{% endif %}
+                  </p>
+                </div>
+                {% if active_child.age %}
+                  <div class="col-md-6 mb-3">
+                    <h6 class="text-muted">السن</h6>
+                    <p class="fw-bold">{{ active_child.age }} سنة</p>
+                  </div>
+                {% endif %}
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">رمز السوار</h6>
+                  <p class="fw-bold">{{ active_child.bracelet_code }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="alert alert-info mt-4">
+        <h5>👋 مرحباً!</h5>
+        <p>يرجى إضافة طفل لبدء الاستخدام</p>
+        <a class="btn btn-primary" href="{{ url_for('add_child') }}">➕ إضافة طفل جديد</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

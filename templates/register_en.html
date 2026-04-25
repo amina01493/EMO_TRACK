@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #c5e1f5 0%, #a8d8ff 35%, #5faee9 65%, #ffb3d9 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  
+  .register-container {
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+  }
+  
+  .register-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .register-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  
+  .register-header p {
+    color: var(--text-light);
+    font-size: 0.95rem;
+  }
+  
+  .form-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-medium);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 25px;
+    margin-bottom: 20px;
+  }
+  
+  .form-section-title:first-of-type {
+    margin-top: 0;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.9rem;
+  }
+  
+  .form-control,
+  .form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-medium);
+    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    outline: none;
+  }
+  
+  .btn-register {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .divider {
+    border: none;
+    height: 1px;
+    background: #e0e0e0;
+    margin: 30px 0;
+  }
+  
+  .register-footer {
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .register-footer p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  
+  .register-footer a {
+    color: var(--primary-medium);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .register-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="register-container">
+  <div class="register-header">
+    <h2>Create Account</h2>
+    <p>Join us to keep your children safe</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="form-section-title">Guardian Information</div>
+    
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" class="form-control" name="username" required placeholder="Choose a username">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" name="email" required placeholder="your@email.com">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-control" name="password" required placeholder="Strong password">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" class="form-control" name="phone_number" required placeholder="+1234567890">
+    </div>
+
+    <hr class="divider">
+    
+    <div class="form-section-title">First Child Information</div>
+
+    <div class="form-group">
+      <label class="form-label">Child Name</label>
+      <input type="text" class="form-control" name="child_name" required placeholder="e.g., John">
+    </div>
+
+    <div class="row">
+      <div class="col-6">
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-select" name="gender">
+            <option value="boy">👦 Boy</option>
+            <option value="girl">👧 Girl</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input type="number" class="form-control" name="child_age" min="1" max="18" placeholder="8">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Bracelet Code (Device ID)</label>
+      <input type="text" class="form-control" name="bracelet_code" placeholder="Device identifier" required>
+    </div>
+
+    <button type="submit" class="btn btn-register">Create Account</button>
+  </form>
+
+  <div class="register-footer">
+    <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

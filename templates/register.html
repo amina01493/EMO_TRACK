@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg border-0">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <h2 class="fw-bold">إنشاء حساب جديد</h2>
+            <p class="text-muted">لنحمي أطفالنا معاً</p>
+          </div>
+
+          <form method="post">
+            <h5 class="mb-3 fw-bold">بيانات الأب/الأم</h5>
+            
+            <div class="mb-3">
+              <label class="form-label fw-bold">اسم المستخدم</label>
+              <input class="form-control" name="username" required placeholder="اختر اسم مستخدم">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">البريد الإلكتروني</label>
+              <input class="form-control" name="email" type="email" required placeholder="your@email.com">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">كلمة السر</label>
+              <input class="form-control" name="password" type="password" required placeholder="كلمة سر قوية">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">رقم الهاتف</label>
+              <input class="form-control" name="phone_number" type="tel" required placeholder="+201012345678">
+            </div>
+
+            <hr class="my-4">
+            <h5 class="mb-3 fw-bold">بيانات الطفل الأول</h5>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">اسم الطفل</label>
+              <input class="form-control" name="child_name" required placeholder="أحمد">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">النوع</label>
+                <select class="form-select" name="gender">
+                  <option value="boy">ذكر 👦</option>
+                  <option value="girl">أنثى 👧</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">السن</label>
+                <input class="form-control" name="child_age" type="number" min="1" max="18" placeholder="8">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold">رمز السوار (Bracelet Code)</label>
+              <input class="form-control" name="bracelet_code" placeholder="Device ID" required>
+            </div>
+
+            <button class="btn btn-primary w-100 fw-bold btn-lg mt-4" type="submit">
+              إنشاء الحساب
+            </button>
+          </form>
+
+          <hr class="my-4">
+          <p class="text-center mb-0 small">
+            لديك حساب بالفعل؟ 
+            <a href="{{ url_for('login') }}" class="fw-bold">دخول الآن</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .card {
+      border-radius: 15px;
+    }
+    .form-control, .form-select {
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #5faee9;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #5faee9 0%, #5b7fa3 100%);
+      border: none;
+      border-radius: 8px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+  </style>
+{% endblock %}
+

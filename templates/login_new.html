@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #c5e1f5 0%, #a8d8ff 35%, #5faee9 65%, #ffb3d9 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .login-wrapper {
+    display: flex;
+    width: 100%;
+    max-width: 900px;
+    height: 600px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+  }
+  
+  .login-illustration {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  
+  .illustration-content {
+    text-align: center;
+  }
+  
+  .illustration-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  
+  .illustration-content p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+  }
+  
+  .login-form-container {
+    flex: 1;
+    padding: 60px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .login-form-header h1 {
+    font-size: 2rem;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  
+  .login-form-header p {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    margin-bottom: 30px;
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .form-control {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: var(--primary-medium);
+    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    outline: none;
+  }
+  
+  .btn-login {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .btn-login:active {
+    transform: translateY(0);
+  }
+  
+  .login-footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.9rem;
+  }
+  
+  .login-footer p {
+    color: var(--text-light);
+  }
+  
+  .login-footer a {
+    color: var(--primary-medium);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  .login-footer a:hover {
+    text-decoration: underline;
+  }
+  
+  .alert {
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .login-wrapper {
+      flex-direction: column;
+      height: auto;
+      max-width: 100%;
+    }
+    
+    .login-illustration {
+      padding: 40px 20px;
+      min-height: 200px;
+    }
+    
+    .login-form-container {
+      padding: 40px 20px;
+    }
+    
+    .login-form-header h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<div class="login-wrapper">
+  <div class="login-illustration">
+    <div class="illustration-content">
+      <div style="font-size: 4rem; margin-bottom: 20px;">👶</div>
+      <h2>Child Guard</h2>
+      <p>Keep your children safe<br>with real-time tracking</p>
+    </div>
+  </div>
+  
+  <div class="login-form-container">
+    <div class="login-form-header">
+      <h1>Welcome Back</h1>
+      <p>Sign in to your account</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" name="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-login">Sign In</button>
+    </form>
+    
+    <div class="login-footer">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p>
+      <p style="margin-top: 10px;"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

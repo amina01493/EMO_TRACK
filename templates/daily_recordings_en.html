@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% block title %}Daily Recordings - {{ child.name }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  * {
+    font-size: 13px !important;
+  }
+  
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+  h5 { font-size: 0.95rem !important; }
+  h6 { font-size: 0.85rem !important; }
+  p { font-size: 0.9rem !important; }
+  
+  .recordings-header {
+    margin-bottom: 20px;
+  }
+  
+  .recordings-header h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+  }
+  
+  .card-header {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+    font-weight: 600;
+    padding: 12px 15px !important;
+  }
+  
+  .card-body {
+    padding: 15px !important;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    display: block;
+    font-size: 0.9rem !important;
+  }
+  
+  .form-control {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 0.9rem !important;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: var(--primary-medium);
+    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    outline: none;
+  }
+  
+  .btn-upload {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 0.9rem !important;
+  }
+  
+  .btn-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .recording-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-medium);
+  }
+  
+  .recording-type-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .badge-video {
+    background: #ff6b6b;
+    color: white;
+  }
+  
+  .badge-photo {
+    background: #51cf66;
+    color: white;
+  }
+  
+  .badge-audio {
+    background: #ffd43b;
+    color: #333;
+  }
+  
+  .recording-item h5 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  
+  .recording-meta {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+  
+  .recording-preview {
+    margin: 15px 0;
+    max-width: 100%;
+  }
+  
+  .recording-preview video,
+  .recording-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .recording-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-view {
+    background: var(--primary-medium);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-view:hover {
+    background: var(--primary-dark);
+  }
+  
+  .btn-delete {
+    background: #ff6b6b;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-delete:hover {
+    background: #ff5252;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+  }
+  
+  .empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+  }
+  
+  .recording-types {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .type-option {
+    flex: 1;
+  }
+  
+  .type-option input[type="radio"] {
+    display: none;
+  }
+  
+  .type-option label {
+    display: block;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .type-option input[type="radio"]:checked + label {
+    border-color: var(--primary-medium);
+    background: rgba(95, 174, 233, 0.1);
+  }
+  
+  .type-option label strong {
+    display: block;
+    margin-bottom: 5px;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="recordings-header">
+    <h2>📹 Daily Recordings for {{ child.name }}</h2>
+    <p class="text-muted">Upload videos, photos, and audio from your child's daily activities</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Quick Camera Button -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <a href="{{ url_for('camera', child_id=child.id) }}" class="btn btn-danger" style="font-size: 0.95rem !important; padding: 12px 30px; border-radius: 50px;">
+      📷 Open Camera
+    </a>
+  </div>
+
+  <!-- Upload Form -->
+  <div class="card">
+    <div class="card-header">
+      📤 Upload New Recording
+    </div>
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Recording Type</label>
+          <div class="recording-types">
+            <div class="type-option">
+              <input type="radio" id="video" name="recording_type" value="video" checked>
+              <label for="video">
+                <strong>🎥 Video</strong>
+                <small>MP4, WebM</small>
+              </label>
+            </div>
+            <div class="type-option">
+              <input type="radio" id="photo" name="recording_type" value="photo">
+              <label for="photo">
+                <strong>📷 Photo</strong>
+                <small>JPG, PNG</small>
+              </label>
+            </div>
+            <div class="type-option">
+              <input type="radio" id="audio" name="recording_type" value="audio">
+              <label for="audio">
+                <strong>🎙️ Audio</strong>
+                <small>MP3, WAV</small>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" name="description" placeholder="What's happening in this recording?" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Upload File</label>
+          <input type="file" class="form-control" name="file" required>
+          <small class="text-muted">Max size: 500MB</small>
+        </div>
+
+        <button type="submit" class="btn btn-upload">📤 Upload Recording</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recordings List -->
+  <div class="card">
+    <div class="card-header">
+      📚 All Recordings ({{ recordings|length }})
+    </div>
+    <div class="card-body">
+      {% if recordings %}
+        {% for recording in recordings %}
+          <div class="recording-item">
+            <span class="recording-type-badge {% if recording.recording_type == 'video' %}badge-video{% elif recording.recording_type == 'photo' %}badge-photo{% else %}badge-audio{% endif %}">
+              {% if recording.recording_type == 'video' %}🎥 Video{% elif recording.recording_type == 'photo' %}📷 Photo{% else %}🎙️ Audio{% endif %}
+            </span>
+            
+            <h5>{{ recording.description if recording.description else 'Recording' }}</h5>
+            
+            <div class="recording-meta">
+              <strong>📅 Recorded:</strong> {{ recording.recorded_at.strftime('%Y-%m-%d %H:%M') if recording.recorded_at else 'Just now' }}<br>
+              <strong>⏱️ Uploaded:</strong> {{ recording.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+
+            {% if recording.file_path %}
+              <div class="recording-preview">
+                {% if recording.recording_type == 'video' %}
+                  <video controls style="max-height: 300px;">
+                    <source src="/static/{{ recording.file_path }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                {% elif recording.recording_type == 'photo' %}
+                  <img src="/static/{{ recording.file_path }}" alt="Recording">
+                {% else %}
+                  <audio controls>
+                    <source src="/static/{{ recording.file_path }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                  </audio>
+                {% endif %}
+              </div>
+            {% endif %}
+            
+            <div class="recording-actions">
+              {% if recording.file_path %}
+                <a href="/static/{{ recording.file_path }}" class="btn-view" download>⬇️ Download</a>
+              {% endif %}
+              <button class="btn-view" onclick="toggleShare({{ recording.id }})">👥 Share</button>
+              <form method="POST" action="{{ url_for('daily_recordings', child_id=child.id) }}" style="display:inline;">
+                <input type="hidden" name="action" value="delete_recording">
+                <input type="hidden" name="recording_id" value="{{ recording.id }}">
+                <button type="submit" class="btn-delete" onclick="return confirm('Delete this recording?')">🗑️ Delete</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📹</div>
+          <p>No recordings uploaded yet</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function toggleShare(recordingId) {
+    alert('Share feature coming soon!');
+  }
+</script>
+{% endblock %}

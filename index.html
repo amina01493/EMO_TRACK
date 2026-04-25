@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق المراقبة الأبوية - Guardian Watch</title>
+    <!-- تحميل Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تعيين الخط والتصميم الأساسي -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f5f5f5;
+            direction: rtl;
+        }
+        .app-container {
+            max-width: 420px; /* محاكاة شاشة الموبايل */
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .screen-content {
+            padding-bottom: 72px; /* مسافة لشريط التنقل السفلي */
+        }
+        .nav-icon {
+            font-size: 24px;
+        }
+        /* لإخفاء شريط التمرير الأفقي في الكاروسيل */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="app-container">
+        <!-- Language toggle (top-right) -->
+        <button id="langToggle" onclick="lang = (lang==='ar'?'en':'ar'); renderApp();" title="Toggle language" style="position:absolute; top:8px; left:8px; z-index:60;" class="p-2 rounded-md bg-gray-100 text-sm">AR/EN</button>
+        <!-- منطقة المحتوى الرئيسية -->
+        <div id="screenContent" class="screen-content p-4">
+            <!-- سيتم تحميل المحتوى هنا بواسطة JavaScript -->
+        </div>
+
+        <!-- شريط التنقل السفلي (Bottom Navigation Bar) -->
+        <div id="bottomNav" class="fixed bottom-0 right-0 left-0 bg-white border-t border-gray-200 shadow-xl z-50 mx-auto max-w-420px" style="max-width: 420px;">
+            <div class="flex justify-around items-center h-16">
+                <!-- الصفحة الرئيسية -->
+                <button onclick="setScreen('dashboard')" data-key="home" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 transition duration-150">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6m-6 0h-2a1 1 0 01-1-1v-4m7 4v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4m7 0h-6"></path></svg>
+                    <span class="text-xs mt-0.5">الرئيسية</span>
+                </button>
+                <!-- الموقع -->
+                <button onclick="setScreen('map')" data-key="map" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 transition duration-150">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-xs mt-0.5">الموقع</span>
+                </button>
+                <!-- الصحة -->
+                <button onclick="setScreen('health')" data-key="health" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 transition duration-150">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="text-xs mt-0.5">الصحة</span>
+                </button>
+                <!-- التنبيهات -->
+                <button onclick="setScreen('alerts')" data-key="alerts" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 transition duration-150">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span class="text-xs mt-0.5">تنبيهات</span>
+                </button>
+                <!-- الإعدادات -->
+                <button onclick="setScreen('settings')" data-key="settings" class="flex flex-col items-center justify-center p-2 text-gray-500 hover:text-blue-600 transition duration-150">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.307 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span class="text-xs mt-0.5">إعدادات</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // المتغيرات العالمية للـ Firebase (مطلوبة)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // إعداد API للمساعد الطبي (Gemini)
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+        const API_KEY = ""; // سيتم توفير المفتاح في بيئة Canvas
+
+        // حالة التطبيق
+        let currentScreen = 'dashboard';
+        let themeColor = 'blue'; // blue (أولاد) أو pink (بنات)
+        let lang = 'ar'; // 'ar' or 'en'
+
+        const T = {
+            ar: {
+                home: 'الرئيسية', map: 'الموقع', health: 'الصحة', alerts: 'تنبيهات', settings: 'إعدادات', register: 'تسجيل طفل',
+                welcome: 'مرحباً يا ولي الأمر!', track: 'تتبع حالة', currentStatus: 'الحالة الحالية:', dailyActivity: 'النشاط اليومي', fullReport: 'تقرير كامل + فيديو اليوم',
+                registerTitle: 'تسجيل طفل جديد', s_code: 'رمز السوار (s_code)', name: 'الاسم', gender: 'النوع', color: 'اللون', submit: 'حفظ الطفل', chooseColor: 'اختر اللون بناءً على النوع', fullVideo: 'مشاهدة الفيديو الكامل'
+            },
+            en: {
+                home: 'Home', map: 'Map', health: 'Health', alerts: 'Alerts', settings: 'Settings', register: 'Register Child',
+                welcome: 'Welcome, Parent!', track: 'Tracking', currentStatus: 'Current status:', dailyActivity: 'Daily Activity', fullReport: 'Full Report + Full Day Video',
+                registerTitle: 'Register a Child', s_code: 'Bracelet s_code', name: 'Name', gender: 'Gender', color: 'Color', submit: 'Save Child', chooseColor: 'Pick color based on gender', fullVideo: 'Watch full day video'
+            }
+        };
+        let activeChildIndex = 0;
+        let isLoading = false;
+        let healthChatHistory = [
+            { role: 'model', text: 'مرحباً! أنا مساعد الذكاء الصحي. أستطيع أن أقدم لك معلومات موثوقة حول صحة طفلك، لكن لا أستطيع تشخيص أو علاج أي مرض. يرجى استشارة الطبيب دائماً. كيف يمكنني مساعدتك اليوم؟' }
+        ];
+
+        // بيانات الأطفال (بيانات وهمية للتجربة)
+        const children = [
+            { id: 1, name: 'سالم', gender: 'boy', status: 'آمن', location: 'المدرسة', steps: 6800, hr: 85, temp: 37.1, meds: ['فيتامين د', 'مضاد حيوي'], isAlert: false },
+            { id: 2, name: 'فاطمة', gender: 'girl', status: 'خطر (نبض)', location: 'المنزل', steps: 3500, hr: 125, temp: 36.6, meds: ['دواء مزمن'], isAlert: true },
+            { id: 3, name: 'يوسف', gender: 'boy', status: 'آمن', location: 'النادي', steps: 11200, hr: 90, temp: 37.0, meds: [], isAlert: false },
+        ];
+
+        // ----------------------------------------------------------------
+        // وظائف Gemini API
+        // ----------------------------------------------------------------
+
+        /**
+         * دالة لطلب واجهة برمجة تطبيقات Gemini مع استراتيجية التراجع الأسي (Exponential Backoff).
+         * @param {object} payload - حمولة JSON لواجهة برمجة تطبيقات Gemini.
+         * @param {number} retries - عدد المحاولات المتبقية.
+         * @returns {Promise<object>} - استجابة واجهة برمجة تطبيقات Gemini.
+         */
+        async function fetchWithRetry(payload, retries = 3) {
+            const url = GEMINI_API_URL + API_KEY;
+            const delay = 1000;
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        return await response.json();
+                    } else if (response.status === 429 && i < retries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay * (2 ** i) + Math.random() * 1000));
+                    } else {
+                        throw new Error(`API Error: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay * (2 ** i) + Math.random() * 1000));
+                }
+            }
+        }
+
+        /**
+         * استدعاء Gemini للحصول على سيناريو فيديو يومي لبيانات الطفل.
+         */
+        async function generateDailySummary() {
+            if (isLoading) return;
+            isLoading = true;
+            renderApp();
+            
+            const child = children[activeChildIndex];
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+
+            const vitalsStatus = child.hr > 120 ? 'غير عادي (نبض مرتفع)' : 'عادي تماماً';
+
+            const userQuery = `أنا ولي أمر الطفل/الطفلة ${child.name}. يرجى إنشاء "سيناريو فيديو يومي" قصير ومبهج للوالدين (مدة دقيقة واحدة). يجب أن يكون النص باللغة العربية الفصحى الودودة وموجه للوالدين مباشرة. استخدم الأرقام الفعلية للبيانات. البيانات: عدد الخطوات: ${child.steps}, معدل ضربات القلب: ${child.hr} نبضة في الدقيقة, درجة الحرارة: ${child.temp} درجة مئوية. حالة المقاييس الحيوية: ${vitalsStatus}.
+            
+            قسّم الإخراج إلى أقسام (مشهد، صوت الراوي، نص الشاشة) وضمّن نصيحة تربوية إيجابية واحدة في النهاية.`;
+
+            const systemPrompt = "أنت مساعد متخصص في صياغة سيناريوهات فيديو مُلخصة ودافئة ومُشجعة للوالدين عن يوم طفلهم. مهمتك هي تحويل البيانات الحيوية إلى قصة مرئية إيجابية ومحفزة.";
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const result = await fetchWithRetry(payload);
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "تعذر إنشاء التقرير المرئي. يرجى المحاولة مرة أخرى.";
+                showMessage(`تم إنشاء سيناريو فيديو لـ ${child.name}`);
+                displayReportModal(child.name, text, primaryColor, '✨ سيناريو فيديو ملخص اليوم ✨');
+
+            } catch (error) {
+                console.error("Gemini Daily Summary Error:", error);
+                showMessage("فشل الاتصال بالنموذج. تحقق من اتصالك.");
+            } finally {
+                isLoading = false;
+                renderApp();
+            }
+        }
+
+        // يُنشئ تقرير يومي كامل مع فيديو يوم كامل (وهمي) ويعرضه في مودال
+        function generateFullReport() {
+            const child = children[activeChildIndex];
+            const reportText = `تقرير كامل ليوم ${child.name}\n\n- الموقع: ${child.location}\n- الخطوات: ${child.steps}\n- نبض: ${child.hr} BPM\n- درجة الحرارة: ${child.temp}°C\n- تنبيهات: ${child.isAlert ? 'نعم' : 'لا'}\n\nهذا تقرير تجريبي. الفيديو الكامل متاح للمشاهدة.`;
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+            displayReportModal(child.name + ' - ' + (lang === 'ar' ? 'التقرير الكامل' : 'Full Report'), reportText, primaryColor, lang === 'ar' ? T.ar.fullReport : T.en.fullReport);
+            // إضافة رابط فيديو وهمي داخل المودال
+            setTimeout(() => {
+                const modal = document.getElementById('reportModal');
+                if (!modal) return;
+                const html = `<div class="p-5 border-t border-gray-100"><a href="#" onclick="showMessage('${lang==='ar'?'فتح الفيديو الكامل':'Open full video'}')" class="w-full block text-center bg-gray-100 text-gray-800 p-3 rounded-lg">${lang==='ar'?T.ar.fullVideo:T.en.fullVideo}</a></div>`;
+                modal.querySelector('div').insertAdjacentHTML('beforeend', html);
+            }, 200);
+        }
+
+        /**
+         * إرسال رسالة إلى المساعد الطبي الآلي (باستخدام البحث الأرضي).
+         * @param {string} userMessage - رسالة المستخدم.
+         */
+        async function sendHealthMessage(userMessage) {
+            if (isLoading || !userMessage.trim()) return;
+
+            healthChatHistory.push({ role: 'user', text: userMessage });
+            isLoading = true;
+            renderApp(); // لتحديث واجهة المستخدم وإظهار رسالة المستخدم ورمز التحميل
+
+            // بناء المحادثة للنموذج
+            const contents = healthChatHistory.map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }]
+            }));
+
+            const systemPrompt = "أنت مساعد طبي آلي موثوق به ومتخصص في صحة الأطفال. وظيفتك هي تقديم معلومات صحية عامة وموثوقة بلغة عربية بسيطة ومهذبة. يجب أن تكون إجاباتك حذرة ولا تشخص المرض، بل توجه المستخدم دائمًا لاستشارة طبيب مختص عند الضرورة. استخدم معلومات حديثة وموثوقة من البحث (Google Search) لدعم إجاباتك.";
+
+            const payload = {
+                contents: contents,
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const result = await fetchWithRetry(payload);
+                const modelText = result.candidates?.[0]?.content?.parts?.[0]?.text || "عذراً، حدث خطأ أثناء معالجة طلبك.";
+                
+                healthChatHistory.push({ role: 'model', text: modelText });
+
+            } catch (error) {
+                console.error("Gemini Health Chat Error:", error);
+                healthChatHistory.push({ role: 'model', text: "عذراً، لم أتمكن من الاتصال بالمساعد الطبي. يرجى التحقق من الشبكة والمحاولة لاحقاً." });
+            } finally {
+                isLoading = false;
+                renderApp(); // لإزالة رمز التحميل وعرض رد النموذج
+                // Scroll to the latest message
+                setTimeout(() => {
+                    const chatWindow = document.getElementById('chatWindow');
+                    if (chatWindow) {
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
+                }, 100);
+            }
+        }
+
+        // ----------------------------------------------------------------
+        // وظائف التحكم في واجهة المستخدم
+        // ----------------------------------------------------------------
+
+        /**
+         * يحول القيمة النصية للجنس إلى لون Tailwind.
+         * @param {string} gender 'boy' أو 'girl'.
+         * @returns {string} اسم لون Tailwind.
+         */
+        function getThemeColor(gender) {
+            return gender === 'boy' ? 'blue' : 'pink';
+        }
+
+        /**
+         * يغير الشاشة الحالية ويعيد رسم الواجهة.
+         * @param {string} screenName - اسم الشاشة (dashboard, map, health, alerts, settings, healthAssistant).
+         */
+        function setScreen(screenName) {
+            currentScreen = screenName;
+            renderApp();
+            // مسح سجل الدردشة عند الخروج من شاشة المساعد الطبي
+            if (screenName !== 'healthAssistant') {
+                healthChatHistory = [
+                    { role: 'model', text: 'مرحباً! أنا مساعد الذكاء الصحي. أستطيع أن أقدم لك معلومات موثوقة حول صحة طفلك، لكن لا أستطيع تشخيص أو علاج أي مرض. يرجى استشارة الطبيب دائماً. كيف يمكنني مساعدتك اليوم؟' }
+                ];
+            }
+        }
+
+        /**
+         * يغير الطفل النشط ويحدث لون الثيم.
+         * @param {number} index - مؤشر الطفل في مصفوفة الأطفال.
+         */
+        function setActiveChild(index) {
+            activeChildIndex = index;
+            themeColor = getThemeColor(children[index].gender);
+            renderApp();
+        }
+
+        /**
+         * يعرض رسالة إشعار بسيطة (بديل لـ alert()).
+         * @param {string} message - الرسالة المراد عرضها.
+         */
+        function showMessage(message) {
+            const container = document.getElementById('app');
+            let toast = document.getElementById('appToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'appToast';
+                toast.className = 'fixed top-4 right-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300 opacity-0';
+                container.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        /**
+         * لعرض تقرير الملخص اليومي في نافذة منبثقة.
+         */
+        function displayReportModal(childName, reportText, primaryColor, title) {
+            const modalHTML = `
+                <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] flex justify-center items-center p-4">
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm transform transition-all scale-100 duration-300">
+                        <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                            <h2 class="text-xl font-bold text-${primaryColor}-600">${title}</h2>
+                            <button onclick="document.getElementById('reportModal').remove()" class="text-gray-500 hover:text-gray-700">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <div class="p-5 overflow-y-auto max-h-96">
+                            <div class="text-gray-700 leading-relaxed whitespace-pre-wrap">${reportText}</div>
+                        </div>
+                        <div class="p-5 border-t border-gray-100">
+                            <button onclick="document.getElementById('reportModal').remove()" class="w-full bg-${primaryColor}-500 text-white p-3 rounded-lg font-semibold hover:bg-${primaryColor}-600 transition duration-200">إغلاق</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('app').insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // ----------------------------------------------------------------
+        // وظائف عرض المحتوى
+        // ----------------------------------------------------------------
+
+        /**
+         * يعرض شريط تمرير الأطفال في أعلى الصفحة.
+         * @returns {string} كود HTML لشريط التمرير.
+         */
+        function renderChildCarousel() {
+            return `
+                <div class="flex space-x-4 mb-6 overflow-x-auto pb-2 border-b border-gray-100 no-scrollbar">
+                    ${children.map((child, index) => {
+                        const isActive = index === activeChildIndex;
+                        const borderColor = child.gender === 'boy' ? 'border-blue-500' : 'border-pink-500';
+                        return `
+                            <div onclick="setActiveChild(${index})" class="flex-shrink-0 cursor-pointer text-center p-2 transition duration-300 ${isActive ? 'scale-105' : 'opacity-60'}">
+                                <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center border-4 ${isActive ? borderColor : 'border-transparent'}">
+                                    <span class="text-3xl">${child.gender === 'boy' ? '👦' : '👧'}</span>
+                                </div>
+                                <span class="text-sm font-medium mt-1 block ${isActive ? `text-${themeColor}-600` : 'text-gray-500'}">${child.name}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        /**
+         * يعرض المحتوى الخاص بلوحة القيادة (Dashboard).
+         */
+        function renderDashboard() {
+            const child = children[activeChildIndex];
+            const safeColor = child.isAlert ? 'red' : 'green';
+            const safeText = child.isAlert ? 'خطر' : 'آمن';
+
+            return `
+                <h1 class="text-xl font-bold text-gray-800 mb-2">مرحباً يا ولي الأمر!</h1>
+                <p class="text-gray-500 mb-6">تتبع حالة ${child.name} في الوقت الفعلي.</p>
+
+                <!-- بطاقة الحالة الرئيسية -->
+                <div class="bg-white p-5 rounded-xl shadow-lg mb-6 border-b-4 border-${safeColor}-500">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-lg font-semibold text-gray-700">الحالة الحالية:</span>
+                        <span class="text-2xl font-bold text-${safeColor}-600">${safeText}</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-500">
+                        <svg class="w-5 h-5 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        الموقع الأخير: ${child.location}
+                    </div>
+                </div>
+
+                <!-- المقاييس الحيوية (Vitals) -->
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">مقاييس حية</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <!-- معدل ضربات القلب -->
+                    <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center border-b-2 border-${child.hr > 120 ? 'red' : themeColor}-500">
+                        <span class="text-xs text-gray-500">ضربات القلب (BPM)</span>
+                        <span class="text-4xl font-extrabold mt-1 text-${child.hr > 120 ? 'red' : themeColor}-600">${child.hr}</span>
+                        ${child.hr > 120 ? '<span class="text-xs text-red-500 font-bold mt-1">إنذار!</span>' : '<span class="text-xs text-green-500 font-bold mt-1">طبيعي</span>'}
+                    </div>
+                    <!-- درجة الحرارة -->
+                    <div class="bg-white p-4 rounded-xl shadow-md flex flex-col items-center border-b-2 border-${themeColor}-500">
+                        <span class="text-xs text-gray-500">الحرارة (°C)</span>
+                        <span class="text-4xl font-extrabold mt-1 text-${themeColor}-600">${child.temp}</span>
+                        <span class="text-xs text-gray-500 mt-1">طبيعي</span>
+                    </div>
+                </div>
+
+                <!-- عدد الخطوات -->
+                <div class="bg-white p-5 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">النشاط اليومي</h2>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-${themeColor}-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13.786c-.368-.216-1.558-.875-2.584-.233-.509.324-.874 1.144-.874 1.956.126.315 1.056.883 1.956.234.901-.649 1.956-.324 2.584.233.509-.324.874-1.144.874-1.956.037-.99-.95-1.996-2.094-1.786V7.086c0-1.162-.647-2.071-1.636-2.457L11 3.5v15.5"></path></svg>
+                            <span class="text-xl font-bold">${child.steps}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">خطوة اليوم</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+                        <div class="h-2.5 rounded-full bg-${themeColor}-500" style="width: ${Math.min(child.steps / 100, 100)}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">الهدف اليومي: 10,000 خطوة</p>
+                </div>
+
+                <!-- أزرار الوصول السريع -->
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">وصول سريع</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    <button onclick="showMessage('بدء بث الفيديو المباشر لـ ${child.name}')" class="flex flex-col items-center p-3 bg-${themeColor}-100 text-${themeColor}-700 rounded-xl hover:bg-${themeColor}-200 transition duration-200 shadow-md">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span class="text-xs mt-1 font-medium">مشاهدة حية</span>
+                    </button>
+                    <button onclick="showMessage('بدء الاستماع الصوتي لـ ${child.name}')" class="flex flex-col items-center p-3 bg-${themeColor}-100 text-${themeColor}-700 rounded-xl hover:bg-${themeColor}-200 transition duration-200 shadow-md">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a4 4 0 00-4 4v2m8-6a4 4 0 01-4 4v2"></path></svg>
+                        <span class="text-xs mt-1 font-medium">استماع صوتي</span>
+                    </button>
+                    <button onclick="generateDailySummary()" class="flex flex-col items-center p-3 bg-yellow-100 text-yellow-700 rounded-xl hover:bg-yellow-200 transition duration-200 shadow-md">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13.786c-.368-.216-1.558-.875-2.584-.233-.509.324-.874 1.144-.874 1.956.126.315 1.056.883 1.956.234.901-.649 1.956-.324 2.584.233.509-.324.874-1.144.874-1.956.037-.99-.95-1.996-2.094-1.786V7.086c0-1.162-.647-2.071-1.636-2.457L11 3.5v15.5"></path></svg>
+                        <span class="text-xs mt-1 font-medium">✨ ملخص اليوم المرئي</span>
+                    </button>
+                    <button onclick="generateFullReport()" class="flex flex-col items-center p-3 bg-indigo-100 text-indigo-700 rounded-xl hover:bg-indigo-200 transition duration-200 shadow-md">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span class="text-xs mt-1 font-medium">📹 Full Report</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        /**
+         * يعرض المحتوى الخاص بشاشة الصحة. (محدث لاستبدال زر الدردشة)
+         */
+        function renderHealth() {
+            const child = children[activeChildIndex];
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+
+            return `
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">الصحة والرعاية لـ ${child.name}</h1>
+
+                <!-- قسم إدارة الأدوية -->
+                <div class="bg-white p-5 rounded-xl shadow-lg mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700">جدول الأدوية (${child.meds.length} دواء)</h2>
+                        <button class="text-sm font-semibold text-${primaryColor}-600" onclick="showMessage('فتح نموذج إضافة دواء')">إضافة +</button>
+                    </div>
+
+                    ${child.meds.length > 0 ? child.meds.map(med => `
+                        <div class="flex items-center justify-between p-3 border-b last:border-b-0">
+                            <div class="flex flex-col">
+                                <span class="font-medium">${med}</span>
+                                <span class="text-xs text-gray-500">الموعد التالي: 08:00 مساءً</span>
+                            </div>
+                            <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">نشط</span>
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-sm">لا يوجد أدوية مُسجلة حاليًا.</p>'}
+                </div>
+
+                <!-- قسم التقرير الصحي -->
+                <div class="bg-white p-5 rounded-xl shadow-lg mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">التقرير الصحي والأمراض المزمنة</h2>
+                    <p class="text-sm text-gray-500 mb-4">ملء هذا التقرير لتمكين التنبيهات ومشاركة المعلومات الطبية.</p>
+                    <button class="w-full bg-${primaryColor}-500 text-white p-3 rounded-lg font-semibold hover:bg-${primaryColor}-600 transition duration-200 mb-3" onclick="showMessage('فتح نموذج التقرير الصحي')">تعديل التقرير الطبي</button>
+                    <button class="w-full bg-gray-100 text-gray-700 p-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-200" onclick="showMessage('تم إنشاء رابط مشاركة التقرير')">مشاركة التقرير مع طبيب</button>
+                </div>
+
+                <!-- قسم الدردشة الآلية (محدث) -->
+                <div class="bg-white p-5 rounded-xl shadow-lg">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-4">المساعد الطبي الآلي ✨</h2>
+                    <p class="text-sm text-gray-500 mb-4">اسأل نموذج الذكاء الاصطناعي عن أي شيء يخص صحة طفلك أو بياناته الحيوية.</p>
+                    <button class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold hover:bg-green-600 transition duration-200" onclick="setScreen('healthAssistant')">بدء المحادثة</button>
+                </div>
+            `;
+        }
+
+        /**
+         * يعرض شاشة المساعد الطبي الآلي (Chatbot UI).
+         */
+        function renderHealthAssistant() {
+            const child = children[activeChildIndex];
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+
+            const chatMessages = healthChatHistory.map(msg => {
+                const isUser = msg.role === 'user';
+                const bgColor = isUser ? `bg-${primaryColor}-50` : 'bg-gray-100';
+                const justify = isUser ? 'justify-end' : 'justify-start';
+                const margin = isUser ? 'mr-10' : 'ml-10';
+                const avatar = isUser ? '👤' : '🤖';
+
+                return `
+                    <div class="flex ${justify} mb-3">
+                        <div class="flex items-start max-w-[85%]">
+                            ${!isUser ? `<span class="text-2xl mr-2">${avatar}</span>` : ''}
+                            <div class="p-3 rounded-xl shadow-sm ${bgColor} ${margin} whitespace-pre-wrap text-sm text-gray-700">
+                                ${msg.text}
+                            </div>
+                            ${isUser ? `<span class="text-2xl ml-2">${avatar}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-xl font-bold text-${primaryColor}-600">المساعد الطبي لـ ${child.name}</h1>
+                    <button onclick="setScreen('health')" class="text-sm font-semibold text-gray-500 hover:text-gray-700">العودة</button>
+                </div>
+
+                <div id="chatWindow" class="bg-white p-3 rounded-xl shadow-inner mb-4 h-[65vh] overflow-y-auto flex flex-col">
+                    ${chatMessages}
+                    <!-- رمز التحميل -->
+                    ${isLoading ? `
+                        <div class="flex justify-start mb-3">
+                            <div class="flex items-center max-w-[85%]">
+                                <span class="text-2xl mr-2">🤖</span>
+                                <div class="bg-gray-100 p-3 rounded-xl shadow-sm ml-10">
+                                    <div class="flex space-x-1">
+                                        <div class="w-2 h-2 bg-${primaryColor}-500 rounded-full animate-bounce" style="animation-delay: -0.32s;"></div>
+                                        <div class="w-2 h-2 bg-${primaryColor}-500 rounded-full animate-bounce" style="animation-delay: -0.16s;"></div>
+                                        <div class="w-2 h-2 bg-${primaryColor}-500 rounded-full animate-bounce"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="flex items-center">
+                    <input type="text" id="chatInput" placeholder="اكتب سؤالك الصحي هنا..." 
+                        onkeydown="if(event.key === 'Enter') { sendHealthMessage(this.value); this.value=''; }"
+                        class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-${primaryColor}-500 transition duration-200 ml-2" />
+                    <button onclick="const input = document.getElementById('chatInput'); sendHealthMessage(input.value); input.value='';" 
+                        class="p-3 bg-${primaryColor}-500 text-white rounded-lg shadow-md hover:bg-${primaryColor}-600 transition duration-200 flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${isLoading ? 'disabled' : ''}>
+                        <svg class="w-6 h-6 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    </button>
+                </div>
+            `;
+        }
+
+        /**
+         * يعرض المحتوى الخاص بشاشة التنبيهات. (عرض وهمي)
+         */
+        function renderAlerts() {
+            const child = children[activeChildIndex];
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+
+            const mockAlerts = [
+                { type: 'Critical', text: 'تجاوز معدل ضربات القلب الحد الطبيعي (125 BPM).', time: 'منذ 10 دقائق' },
+                { type: 'Safety', text: 'خروج ${child.name} من المنطقة الآمنة (المدرسة).', time: 'منذ ساعتين' },
+                { type: 'Medication', text: 'تذكير: موعد جرعة فيتامين د في تمام الساعة 05:00 مساءً.', time: 'اليوم، 04:55 مساءً' },
+                { type: 'Safety', text: 'دخول ${child.name} إلى المنطقة الآمنة (المنزل).', time: 'اليوم، 04:00 مساءً' },
+                { type: 'Medication', text: 'تم تفويت موعد جرعة صباحية. يُرجى المتابعة.', time: 'أمس، 09:05 صباحاً' },
+            ];
+
+            return `
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">سجل التنبيهات لـ ${child.name}</h1>
+                <div class="space-y-4">
+                    ${mockAlerts.map(alert => {
+                        const isCritical = alert.type === 'Critical' || alert.type === 'Safety';
+                        const bgColor = isCritical ? 'bg-red-50 border-red-500' : `bg-${primaryColor}-50 border-${primaryColor}-300`;
+                        const textColor = isCritical ? 'text-red-700' : 'text-gray-700';
+                        const icon = isCritical ? '⚠️' : '🔔';
+
+                        return `
+                            <div class="p-4 rounded-xl shadow-md ${bgColor} border-r-4">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-semibold ${textColor} flex items-center">
+                                        <span class="ml-2 text-xl">${icon}</span>
+                                        ${alert.text.replace('${child.name}', child.name)}
+                                    </h3>
+                                    <span class="text-xs text-gray-500">${alert.time}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                    <p class="text-center text-gray-400 mt-6">--- نهاية السجل ---</p>
+                </div>
+            `;
+        }
+
+        /**
+         * شاشة الإعدادات مع زر للتسجيل
+         */
+        function renderSettings() {
+            const child = children[activeChildIndex];
+            const primaryColor = child.gender === 'boy' ? 'blue' : 'pink';
+            return `
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">${lang==='ar'?'الإعدادات': 'Settings'}</h1>
+                <div class="bg-white p-5 rounded-xl shadow-lg mb-6">
+                    <p class="text-sm text-gray-500 mb-4">${lang==='ar'?'هنا يمكن للوالدين إدارة الحساب وإضافة أطفال جدد.':'Manage account and add new children here.'}</p>
+                    <button onclick="setScreen('register')" class="w-full bg-${themeColor}-500 text-white p-3 rounded-lg font-semibold hover:bg-${themeColor}-600 transition duration-200">${lang==='ar'?T.ar.register:T.en.register}</button>
+                </div>
+            `;
+        }
+
+        /**
+         * شاشة تسجيل طفل جديدة مع s_code و اختيار اللون
+         */
+        function renderRegistration() {
+            return `
+                <h1 class="text-2xl font-bold mb-4">${lang==='ar'?T.ar.registerTitle:T.en.registerTitle}</h1>
+                <div class="bg-white p-5 rounded-xl shadow-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${lang==='ar'?T.ar.s_code:T.en.s_code}</label>
+                    <input id="input_s_code" class="w-full border p-2 rounded mb-3" />
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${lang==='ar'?T.ar.name:T.en.name}</label>
+                    <input id="input_name" class="w-full border p-2 rounded mb-3" />
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${lang==='ar'?T.ar.gender:T.en.gender}</label>
+                    <select id="input_gender" class="w-full border p-2 rounded mb-3">
+                        <option value="boy">${lang==='ar'?'ولد':'Boy'}</option>
+                        <option value="girl">${lang==='ar'?'بنت':'Girl'}</option>
+                    </select>
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">${lang==='ar'?T.ar.chooseColor:T.en.chooseColor}</label>
+                    <div class="flex gap-2 mb-4">
+                        <button type="button" onclick="document.getElementById('input_color').value='blue'" class="p-2 rounded bg-blue-400 w-10 h-10"></button>
+                        <button type="button" onclick="document.getElementById('input_color').value='pink'" class="p-2 rounded bg-pink-400 w-10 h-10"></button>
+                        <input id="input_color" type="hidden" value="blue" />
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="saveChild()" class="flex-1 bg-green-500 text-white p-3 rounded-lg">${lang==='ar'?T.ar.submit:T.en.submit}</button>
+                        <button onclick="setScreen('settings')" class="flex-1 bg-gray-100 text-gray-700 p-3 rounded-lg">${lang==='ar'?'إلغاء':'Cancel'}</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveChild() {
+            const s_code = document.getElementById('input_s_code').value.trim();
+            const name = document.getElementById('input_name').value.trim();
+            const gender = document.getElementById('input_gender').value;
+            const color = document.getElementById('input_color').value || (gender==='boy'?'blue':'pink');
+            if (!s_code || !name) {
+                showMessage(lang==='ar'?'الرجاء ملء الاسم ورمز السوار.':'Please fill name and s_code.');
+                return;
+            }
+            // إضافة الطفل للمصفوفة
+            const newChild = { id: Date.now(), s_code, name, gender, status: 'آمن', location: 'غير محدد', steps: 0, hr: 80, temp: 36.8, meds: [], isAlert: false };
+            children.push(newChild);
+            showMessage(lang==='ar'?'تم إضافة الطفل':'Child added');
+            setActiveChild(children.length - 1);
+            setScreen('dashboard');
+        }
+
+        /**
+         * يعرض محتوى شاشات الموقع والإعدادات. (عرض وهمي)
+         */
+        function renderGenericScreen(title, content) {
+            const child = children[activeChildIndex];
+            return `
+                <h1 class="text-2xl font-bold text-${themeColor}-600 mb-6">${title}</h1>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <p class="text-gray-700">${content}</p>
+                    <p class="text-sm text-gray-400 mt-4">هذه الشاشة مخصصة لـ: ${child.name}</p>
+                    ${title === 'تتبع الموقع (الخريطة)' ? `
+                        <div class="h-64 mt-6 bg-gray-200 rounded-lg flex items-center justify-center border-4 border-dashed border-${themeColor}-400">
+                            <span class="text-xl text-gray-500">هنا الخريطة مع المناطق الآمنة</span>
+                        </div>
+                        <button class="w-full mt-4 bg-${themeColor}-500 text-white p-3 rounded-lg font-semibold hover:bg-${themeColor}-600 transition duration-200" onclick="showMessage('فتح شاشة إدارة المناطق الآمنة')">إدارة المناطق الآمنة</button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * الوظيفة الرئيسية لإعادة رسم التطبيق بالكامل.
+         */
+        function renderApp() {
+            const contentDiv = document.getElementById('screenContent');
+            let contentHTML = '';
+
+            // إخفاء شريط التنقل في شاشة المساعد الطبي لتوفير مساحة
+            const bottomNav = document.getElementById('bottomNav');
+            if (currentScreen === 'healthAssistant') {
+                bottomNav.classList.add('hidden');
+                contentDiv.style.paddingBottom = '0';
+            } else {
+                bottomNav.classList.remove('hidden');
+                contentDiv.style.paddingBottom = '72px';
+            }
+
+            // 1. عرض شريط التمرير للأطفال في كل الشاشات
+            if (currentScreen !== 'healthAssistant') {
+                contentHTML += renderChildCarousel();
+            }
+
+            // 2. تحديد محتوى الشاشة بناءً على الحالة الحالية
+            switch (currentScreen) {
+                case 'dashboard':
+                    contentHTML += renderDashboard();
+                    break;
+                case 'health':
+                    contentHTML += renderHealth();
+                    break;
+                case 'healthAssistant':
+                    contentHTML += renderHealthAssistant();
+                    break;
+                case 'alerts':
+                    contentHTML += renderAlerts();
+                    break;
+                case 'map':
+                    contentHTML += renderGenericScreen(lang==='ar' ? 'تتبع الموقع (الخريطة)' : 'Tracking (Map)', lang==='ar' ? 'هذه الشاشة تعرض خريطة الموقع الحي للطفل مع تحديد المناطق الآمنة.' : 'This screen shows live child map with safe zones.');
+                    break;
+                case 'settings':
+                    contentHTML += renderSettings();
+                    break;
+                case 'register':
+                    contentHTML += renderRegistration();
+                    break;
+                default:
+                    contentHTML += renderDashboard();
+            }
+
+            contentDiv.innerHTML = contentHTML;
+
+            // تحديث لون شريط التنقل السفلي وملصقات اللغة
+            const navButtons = document.querySelectorAll('#bottomNav button');
+            navButtons.forEach(button => {
+                const screen = button.getAttribute('onclick').match(/'([^']+)'/)[1];
+                const key = button.dataset.key;
+                const span = button.querySelector('span');
+                if (key && T[lang] && T[lang][key]) span.textContent = T[lang][key];
+                if (screen === currentScreen) {
+                    button.classList.add(`text-${themeColor}-600`);
+                    button.classList.remove('text-gray-500');
+                } else {
+                    button.classList.remove(`text-${themeColor}-600`);
+                    button.classList.add('text-gray-500');
+                }
+            });
+        }
+
+        // بدء التطبيق عند تحميل النافذة
+        window.onload = function() {
+            // تعيين الطفل النشط الأولي وتطبيق الثيم
+            setActiveChild(activeChildIndex);
+            renderApp();
+        };
+
+        // ملاحظة: لا حاجة لإضافة كتلة DOMContentLoaded منفصلة لإخفاء شريط التمرير، لقد تم دمجها في الـ <style>.
+    </script>
+</body>
+</html>

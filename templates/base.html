@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#5faee9">
+    <meta name="description" content="Child Guard - Keep your family safe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Child Guard">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%235faee9' width='180' height='180'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='90' fill='white' font-family='Arial'>👶</text></svg>">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <title>{% block title %}Child Guard{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      :root {
+        --primary-light: #c5e1f5;
+        --primary-medium: #5faee9;
+        --primary-dark: #5b7fa3;
+        --accent-pink: #ffb3d9;
+        --text-dark: #333;
+        --text-light: #666;
+      }
+      
+      * {
+        font-size: 14px !important;
+      }
+      
+      h1 { font-size: 1.75rem !important; }
+      h2 { font-size: 1.5rem !important; }
+      h3 { font-size: 1.25rem !important; }
+      h4 { font-size: 1.1rem !important; }
+      h5 { font-size: 1rem !important; }
+      h6 { font-size: 0.9rem !important; }
+      
+      .lead { font-size: 0.95rem !important; }
+      p { font-size: 0.9rem !important; }
+      small { font-size: 0.8rem !important; }
+      
+      body {
+        padding-bottom: 80px;
+        background: linear-gradient(135deg, #c5e1f5 0%, #a8d8ff 35%, #5faee9 65%, #ffb3d9 100%);
+        min-height: 100vh;
+        font-size: 14px;
+      }
+      
+      .alert {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 12px 15px !important;
+        font-size: 0.9rem !important;
+        margin-bottom: 12px;
+        backdrop-filter: blur(10px);
+      }
+      
+      .alert-success {
+        background: #d4edda !important;
+        color: #155724 !important;
+        border-color: #c3e6cb !important;
+      }
+      
+      .alert-danger {
+        background: #f8d7da !important;
+        color: #721c24 !important;
+        border-color: #f5c6cb !important;
+      }
+      
+      .alert-warning {
+        background: #fff3cd !important;
+        color: #856404 !important;
+        border-color: #ffeeba !important;
+      }
+      
+      .alert-info {
+        background: #d1ecf1 !important;
+        color: #0c5460 !important;
+        border-color: #bee5eb !important;
+      }
+      
+      .phone-frame {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .navbar {
+        background: linear-gradient(135deg, #5faee9 0%, #5b7fa3 100%) !important;
+        color: white !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+        padding: 12px 0 !important;
+      }
+      
+      .navbar .container-fluid {
+        background: transparent !important;
+        border-radius: 0 !important;
+        margin-top: 0 !important;
+        padding: 0 15px !important;
+      }
+      
+      .navbar-brand {
+        color: white !important;
+        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      .nav-link {
+        color: white !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        margin-left: 15px;
+      }
+      
+      .nav-link:hover {
+        color: #ffb3d9 !important;
+        transform: translateY(-1px);
+        transition: all 0.3s ease;
+      }
+      
+      .page-container {
+        background: transparent;
+        border-radius: 0;
+        margin-top: 0;
+      }
+      
+      .container {
+        background: transparent !important;
+        padding: 15px 12px !important;
+      }
+      
+      .phone-content {
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone-frame">
+      <nav class="navbar navbar-expand sticky-top">
+        <div class="container-fluid px-3">
+          <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">👶 Child Guard</a>
+          <div class="navbar-nav ms-auto">
+            {% if current_user.is_authenticated %}
+              <span class="nav-link small" style="font-size: 0.8rem !important; font-weight: 500;">{{ current_user.username }}</span>
+              <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+              <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+              <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+          </div>
+        </div>
+      </nav>
+
+      <div class="phone-content flex-grow-1">
+        <div class="container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, msg in messages %}
+                <div class="alert alert-{{ 'warning' if category=='warning' else 'danger' if category=='danger' else category }} alert-dismissible fade show mt-3" role="alert">
+                  {{ msg }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // تسجيل Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
+          .then(registration => {
+            console.log('Service Worker registered:', registration);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      }
+
+      // إظهار prompt تثبيت التطبيق
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        showInstallButton();
+      });
+
+      function showInstallButton() {
+        const installBtn = document.getElementById('installBtn');
+        if (installBtn && deferredPrompt) {
+          installBtn.style.display = 'block';
+          installBtn.addEventListener('click', async () => {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+          });
+        }
+      }
+
+      // الكشف عن تثبيت التطبيق
+      window.addEventListener('appinstalled', () => {
+        console.log('Guardian app installed successfully');
+      });
+
+      // طلب إذن الموقع
+      function requestLocationPermission() {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.watchPosition(
+            position => {
+              const { latitude, longitude } = position.coords;
+              console.log('Location:', latitude, longitude);
+              // إرسال الموقع إلى السيرفر
+              fetch('/api/update-location', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude, longitude })
+              });
+            },
+            error => console.log('Location error:', error),
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+          );
+        }
+      }
+
+      // طلب إذن الإشعارات
+      function requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission();
+        }
+      }
+
+      // تشغيل الأذونات عند التحميل
+      document.addEventListener('DOMContentLoaded', () => {
+        requestLocationPermission();
+        requestNotificationPermission();
+      });
+    </script>
+  </body>
+</html>
+

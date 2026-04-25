@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block title %}Welcome - Child Guard{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  body {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-medium) 50%, var(--accent-pink) 100%);
+    min-height: 100vh;
+  }
+  
+  .home-container {
+    padding: 40px 20px;
+  }
+  
+  .hero-section {
+    text-align: center;
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+  
+  .hero-icon {
+    font-size: 5rem;
+    animation: bounce 2s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  
+  .hero-section h1 {
+    color: var(--text-dark);
+    font-weight: 800;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hero-section p {
+    font-size: 1.3rem;
+    font-weight: 500;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 15px 40px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.3);
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .btn-outline-primary {
+    color: white;
+    border: 2px solid white;
+    background: transparent;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-outline-primary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-3px);
+    border-color: white;
+  }
+  
+  .features-section {
+    padding-top: 80px !important;
+    padding-bottom: 60px !important;
+  }
+  
+  .feature-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  .feature-icon {
+    font-size: 3rem;
+  }
+  
+  .feature-card h5 {
+    color: var(--text-dark);
+  }
+  
+  .feature-card p {
+    color: var(--text-light);
+  }
+  
+  .stats-section {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 50px 40px;
+    margin: 60px 0;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+  }
+  
+  .stats-section h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+    color: var(--primary-medium);
+    font-weight: 800;
+  }
+  
+  .stat-text {
+    color: var(--text-light);
+    margin-top: 10px;
+  }
+  
+  .cta-section {
+    text-align: center;
+    padding: 60px 40px;
+    color: white;
+  }
+  
+  .cta-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+  }
+  
+  .cta-section p {
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto 40px;
+    opacity: 0.95;
+  }
+</style>
+
+<div class="home-container">
+  <div class="container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-icon">👶</div>
+      <h1>Child Guard</h1>
+      <p>Keep Your Family Safe with Advanced Tracking & Health Monitoring</p>
+      
+      {% if current_user.is_authenticated %}
+        <a class="btn btn-primary btn-lg mt-5" href="{{ url_for('dashboard') }}">
+          Go to Dashboard
+        </a>
+      {% else %}
+        <div class="mt-5">
+          <a class="btn btn-primary btn-lg" href="{{ url_for('register') }}" style="margin-right: 15px;">
+            Create Account
+          </a>
+          <a class="btn btn-outline-primary btn-lg" href="{{ url_for('login') }}">
+            Sign In
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-section">
+      <h2 style="text-align: center; color: white; font-weight: 700; margin-bottom: 50px;">Our Features</h2>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">📍</div>
+            <h5>Real-Time Tracking</h5>
+            <p>Monitor your child's location in real-time with safe zone alerts</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">🏥</div>
+            <h5>Health Records</h5>
+            <p>Store diseases, medications, and medical appointments securely</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">🔔</div>
+            <h5>Smart Alerts</h5>
+            <p>Get instant notifications for important events and emergencies</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h5>Mobile App</h5>
+            <p>Full functionality as a progressive web app on any device</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h5>Secure & Private</h5>
+            <p>Enterprise-grade security for your family's sensitive data</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="feature-card">
+            <div class="feature-icon">👥</div>
+            <h5>Multi-Child Support</h5>
+            <p>Manage and track multiple children with one account</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+      <h2>Why Choose Child Guard?</h2>
+      <div class="row">
+        <div class="col-md-3 stat-item">
+          <div class="stat-number">24/7</div>
+          <div class="stat-text">Real-Time Monitoring</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number">100%</div>
+          <div class="stat-text">Private & Secure</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number">∞</div>
+          <div class="stat-text">Safe Zones</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number">📲</div>
+          <div class="stat-text">App & Web</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="cta-section" style="background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%); margin-top: 40px; margin-left: -20px; margin-right: -20px; margin-bottom: -40px;">
+    <h2>Start Protecting Your Family Today</h2>
+    <p>Join thousands of families already using Child Guard to keep their children safe</p>
+    {% if not current_user.is_authenticated %}
+      <a class="btn btn-outline-primary btn-lg" href="{{ url_for('register') }}">
+        Get Started Now
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

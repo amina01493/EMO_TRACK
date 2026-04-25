@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+  <!-- Dynamic Color Theme Based on Gender -->
+  <style>
+    /* stylelint-disable */
+    {% if active_child and active_child.gender == 'boy' %}
+    :root {
+      --theme-color: #0d6efd;
+    }
+    {% elif active_child and active_child.gender == 'girl' %}
+    :root {
+      --theme-color: #ec4899;
+    }
+    {% else %}
+    :root {
+      --theme-color: #5faee9;
+    }
+    {% endif %}
+    /* stylelint-enable */
+    
+    .btn-theme, .nav-tabs .nav-link.active {
+      background: var(--theme-color) !important;
+      border-color: var(--theme-color) !important;
+      color: white !important;
+    }
+    
+    .badge-theme {
+      background: var(--theme-color);
+      color: white;
+    }
+    
+    .border-left-theme {
+      border-left: 4px solid var(--theme-color) !important;
+    }
+    
+    .text-theme {
+      color: var(--theme-color);
+    }
+    
+    .nav-tabs .nav-link.active {
+      border-bottom: 3px solid var(--theme-color) !important;
+    }
+  </style>
+
+  <div class="dashboard-grid">
+    <!-- Child Selector -->
+    {% if children %}
+      <div class="child-selector">
+        {% for child in children %}
+          <a href="{{ url_for('dashboard', child_id=child.id) }}" 
+             class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %} {% if child.gender == 'boy' %}boy{% else %}girl{% endif %}">
+            {% if child.gender == 'boy' %}👦{% else %}👧{% endif %} {{ child.name }}
+          </a>
+        {% endfor %}
+        <a href="{{ url_for('add_child') }}" class="child-btn" style="background: #f8f9fa;">
+          ➕ Add
+        </a>
+      </div>
+    {% endif %}
+
+    {% if active_child %}
+      <!-- Navigation Tabs -->
+      <div class="card">
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active text-theme fw-bold" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button">🛡️ Status</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link text-theme fw-bold" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button">🏥 Medical</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link text-theme fw-bold" id="location-tab" data-bs-toggle="tab" data-bs-target="#location" type="button">📍 Zones</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link text-theme fw-bold" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button">📊 Activity</button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        
+        <!-- Status Tab -->
+        <div class="tab-pane fade show active" id="status" role="tabpanel">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span>🛡️ Real-time Status</span>
+              <span class="badge badge-theme">Safe</span>
+            </div>
+            <div class="card-body">
+              <div class="status-card status-safe border-left-theme">
+                <p class="mb-2"><strong>📍 Location:</strong> Home 🏠</p>
+                <p class="mb-2"><strong>❤️ Heart Rate:</strong> 85 BPM</p>
+                <p class="mb-2"><strong>🌡️ Temperature:</strong> 36.8°C</p>
+                <p class="mb-0"><strong>🔋 Battery:</strong> 85%</p>
+              </div>
+              <button class="btn btn-danger w-100 mt-2">🚨 Emergency Alert</button>
+              <button class="btn btn-theme w-100 mt-2" data-bs-toggle="modal" data-bs-target="#cameraModal">📹 Live Camera</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Medical Tab -->
+        <div class="tab-pane fade" id="medical" role="tabpanel">
+          <div class="card">
+            <div class="card-header">🏥 Medical Information</div>
+            <div class="card-body">
+              <h6 class="text-theme mb-2">🦠 Diseases ({{ active_child.diseases|length }})</h6>
+              {% if active_child.diseases %}
+                {% for disease in active_child.diseases %}
+                  <div class="medical-item disease border-left-theme mb-2">
+                    <strong>{{ disease.name }}</strong>
+                    <small class="d-block">{{ disease.description }}</small>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted text-center py-2">No diseases recorded</p>
+              {% endif %}
+
+              <h6 class="text-theme mb-2 mt-3">💊 Medications ({{ active_child.medications|length }})</h6>
+              {% if active_child.medications %}
+                {% for med in active_child.medications %}
+                  <div class="medical-item medication border-left-theme mb-2">
+                    <strong>{{ med.name }}</strong>
+                    <small class="d-block">📅 {{ med.frequency }} | ⏰ {{ med.schedule_time }}</small>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted text-center py-2">No medications recorded</p>
+              {% endif %}
+              
+              <a class="btn btn-theme btn-sm w-100 mt-3" href="{{ url_for('child_medical', child_id=active_child.id) }}">✏️ Edit Medical Info</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Zones Tab -->
+        <div class="tab-pane fade" id="location" role="tabpanel">
+          <div class="card">
+            <div class="card-header">📍 Safe Zones</div>
+            <div class="card-body">
+              <div style="background: #f0f0f0; height: 250px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                <p class="text-muted">📍 Map with safe zones will appear here</p>
+              </div>
+              
+              <h6 class="text-theme mb-2">Current Safe Zones:</h6>
+              {% if active_child.locations %}
+                {% for loc in active_child.locations %}
+                  <div class="medical-item border-left-theme mb-2" style="border-left-color: var(--theme-color) !important;">
+                    📌 {{ loc.name }}
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted text-center py-2">No safe zones configured</p>
+              {% endif %}
+              
+              <a class="btn btn-theme btn-sm w-100 mt-3" href="{{ url_for('child_locations', child_id=active_child.id) }}">⚙️ Manage Zones</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div class="tab-pane fade" id="activity" role="tabpanel">
+          <div class="card">
+            <div class="card-header">📊 Daily Activity & Reports</div>
+            <div class="card-body">
+              <div class="medical-item border-left-theme mb-3">
+                <h6 class="text-theme">📈 Today's Summary</h6>
+                <p class="mb-1"><strong>👣 Steps:</strong> 8,432 / 10,000</p>
+                <p class="mb-1"><strong>🏃 Activity Level:</strong> Moderate</p>
+                <p class="mb-0"><strong>⚠️ Alerts:</strong> None</p>
+              </div>
+
+              <div class="medical-item border-left-theme mb-3">
+                <h6 class="text-theme">📹 Video Recording</h6>
+                <p class="text-muted mb-2">Daily video surveillance available</p>
+                <button class="btn btn-theme w-100" data-bs-toggle="modal" data-bs-target="#reportsModal">▶️ Watch Daily Video</button>
+              </div>
+
+              <div class="medical-item border-left-theme">
+                <h6 class="text-theme">🎤 Voice & Alert Logs</h6>
+                <p class="text-muted text-center py-2">No alerts recorded today</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Actions Floating -->
+      <div class="card mt-3 mb-5">
+        <div class="card-header">⚡ Quick Actions</div>
+        <div class="action-grid">
+          <a href="#" data-bs-toggle="modal" data-bs-target="#cameraModal" class="action-btn">
+            <div class="action-btn-icon">📹</div>
+            <div class="action-btn-label">Live Feed</div>
+          </a>
+          <a href="#" data-bs-toggle="modal" data-bs-target="#reportsModal" class="action-btn">
+            <div class="action-btn-icon">📊</div>
+            <div class="action-btn-label">Reports</div>
+          </a>
+          <a href="{{ url_for('child_medical', child_id=active_child.id) }}" class="action-btn">
+            <div class="action-btn-icon">🏥</div>
+            <div class="action-btn-label">Medical</div>
+          </a>
+          <a href="{{ url_for('child_locations', child_id=active_child.id) }}" class="action-btn">
+            <div class="action-btn-icon">📍</div>
+            <div class="action-btn-label">Zones</div>
+          </a>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="alert alert-info mt-3">
+        <strong>👋 Welcome!</strong> Please add a child to get started.
+      </div>
+      <a href="{{ url_for('add_child') }}" class="btn btn-primary w-100">➕ Add Your First Child</a>
+    {% endif %}
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">📹 Live Camera Feed</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" style="background: #000; min-height: 300px; display: flex; align-items: center; justify-content: center;">
+          <p class="text-white text-center">📷 Camera Feed (Streaming...)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Modal -->
+  <div class="modal fade" id="reportsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">📊 Daily Report & Video</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <h6>📈 Today's Summary</h6>
+          <div class="medical-item border-left-theme mb-3">
+            👣 Steps: 8,432 | 🏃 Activity: Normal | ⚠️ Alerts: 0
+          </div>
+          <button class="btn btn-theme w-100">▶️ Watch Daily Video</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}

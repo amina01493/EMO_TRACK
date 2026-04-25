@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - {{ active_child.name if active_child else 'Guardian' }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  * {
+    font-size: 13px !important;
+  }
+  
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.1rem !important; }
+  h5 { font-size: 0.95rem !important; }
+  h6 { font-size: 0.85rem !important; }
+  p { font-size: 0.9rem !important; }
+  
+  .btn-theme {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%) !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.3s ease;
+    font-size: 0.9rem !important;
+  }
+  
+  .btn-theme:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white !important;
+  }
+  
+  .child-btn {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 10px;
+    background: #f0f0f0;
+    text-decoration: none;
+    color: var(--text-dark);
+    border: 2px solid transparent;
+    transition: all 0.3s;
+    font-weight: 500;
+    font-size: 0.85rem !important;
+  }
+  
+  .child-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+  }
+  
+  .child-btn.active {
+    background: var(--primary-medium);
+    color: white;
+    border-color: var(--primary-dark);
+  }
+  
+  .status-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+  
+  .status-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.25);
+  }
+  
+  .status-card div {
+    font-size: 2rem !important;
+  }
+  
+  .nav-tabs .nav-link {
+    color: var(--text-light);
+    border: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 0.85rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+  
+  .nav-tabs .nav-link:hover {
+    color: var(--primary-medium);
+    border-bottom-color: var(--primary-light);
+  }
+  
+  .nav-tabs .nav-link.active {
+    color: var(--primary-medium);
+    background: none;
+    border-bottom-color: var(--primary-medium);
+    font-weight: 600;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  }
+  
+  .card-header {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+    padding: 12px 15px !important;
+  }
+  
+  .card-header h5 {
+    font-size: 0.95rem !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .card-body {
+    padding: 15px !important;
+  }
+</style>
+
+<div class="container-fluid pt-3 pb-5" style="background: transparent;">
+  <div class="mb-3">
+    <h2 class="fw-bold text-white mb-3" style="font-size: 1.3rem !important;">Dashboard</h2>
+
+    <!-- Child Selector -->
+
+    {% if children %}
+      <div class="mb-4">
+        <h6 class="text-muted mb-3">Select Child:</h6>
+        <div class="child-selector">
+          {% for child in children %}
+            <a href="{{ url_for('dashboard', child_id=child.id) }}" 
+               class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %}">
+              {% if child.gender == 'boy' %}👦{% else %}👧{% endif %} {{ child.name }}
+            </a>
+          {% endfor %}
+          <a href="{{ url_for('add_child') }}" class="child-btn">
+            ➕ Add Child
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if active_child %}
+      <!-- Status Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+          <div class="status-card text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 15px;">🛡️</div>
+            <h6 class="text-muted mb-2">Status</h6>
+            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">Safe</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="status-card text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 15px;">❤️</div>
+            <h6 class="text-muted mb-2">Heart Rate</h6>
+            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85 BPM</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="status-card text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 15px;">🔋</div>
+            <h6 class="text-muted mb-2">Battery</h6>
+            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" href="#medical" data-bs-toggle="tab">
+            🏥 Medical Info
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#locations" data-bs-toggle="tab">
+            📍 Safe Zones
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#reports" data-bs-toggle="tab">
+            📋 Reports
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#recordings" data-bs-toggle="tab">
+            📹 Recordings
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#info" data-bs-toggle="tab">
+            ℹ️ Child Info
+          </a>
+        </li>
+      </ul>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Medical Tab -->
+        <div class="tab-pane fade show active" id="medical">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">🏥 Medical Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="fw-bold mb-3">Diseases ({{ active_child.diseases|length }})</h6>
+                  {% if active_child.diseases %}
+                    <ul class="list-unstyled">
+                      {% for disease in active_child.diseases %}
+                        <li class="mb-2 p-3 bg-light rounded">
+                          <strong>{{ disease.name }}</strong>
+                          {% if disease.description %}
+                            <p class="small text-muted mb-0">{{ disease.description }}</p>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">No diseases recorded</p>
+                  {% endif %}
+                </div>
+                <div class="col-md-6">
+                  <h6 class="fw-bold mb-3">Medications ({{ active_child.medications|length }})</h6>
+                  {% if active_child.medications %}
+                    <ul class="list-unstyled">
+                      {% for med in active_child.medications %}
+                        <li class="mb-2 p-3 bg-light rounded">
+                          <strong>{{ med.name }}</strong>
+                          <p class="small text-muted mb-0">
+                            {% if med.dosage %}Dosage: {{ med.dosage }} | {% endif %}
+                            {% if med.frequency %}Frequency: {{ med.frequency }}{% endif %}
+                          </p>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <p class="text-muted">No medications recorded</p>
+                  {% endif %}
+                </div>
+              </div>
+              <a class="btn btn-theme mt-3" href="{{ url_for('child_medical', child_id=active_child.id) }}">
+                ✏️ Update Medical Info
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locations Tab -->
+        <div class="tab-pane fade" id="locations">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">📍 Safe Zones</h5>
+            </div>
+            <div class="card-body">
+              {% if active_child.locations %}
+                <div class="row">
+                  {% for loc in active_child.locations %}
+                    <div class="col-md-6 mb-3">
+                      <div class="p-3 border rounded" style="border-left: 4px solid var(--primary-medium) !important;">
+                        <h6 class="fw-bold">{{ loc.name }}</h6>
+                        <small class="text-muted">
+                          📍 Latitude: {{ "%.4f"|format(loc.latitude) }}<br>
+                          📍 Longitude: {{ "%.4f"|format(loc.longitude) }}<br>
+                          📏 Radius: {{ loc.radius }} m
+                        </small>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-muted">No safe zones recorded</p>
+              {% endif %}
+              <a class="btn btn-theme mt-3" href="{{ url_for('child_locations', child_id=active_child.id) }}">
+                📍 Manage Safe Zones
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div class="tab-pane fade" id="reports">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">📋 Medical Reports</h5>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-3">Manage doctor's reports and medical documents</p>
+              <a class="btn btn-theme" href="{{ url_for('medical_reports', child_id=active_child.id) }}">
+                📋 View & Upload Reports
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recordings Tab -->
+        <div class="tab-pane fade" id="recordings">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">📹 Daily Recordings</h5>
+            </div>
+            <div class="card-body">
+              <p class="text-muted mb-3">Upload videos, photos, and audio from daily activities</p>
+              <a class="btn btn-theme" href="{{ url_for('daily_recordings', child_id=active_child.id) }}">
+                📹 View & Upload Recordings
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Tab -->
+        <div class="tab-pane fade" id="info">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="fw-bold mb-0">ℹ️ Child Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">Name</h6>
+                  <p class="fw-bold">{{ active_child.name }}</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">Gender</h6>
+                  <p class="fw-bold">
+                    {% if active_child.gender == 'boy' %}👦 Boy{% else %}👧 Girl{% endif %}
+                  </p>
+                </div>
+                {% if active_child.age %}
+                  <div class="col-md-6 mb-3">
+                    <h6 class="text-muted">Age</h6>
+                    <p class="fw-bold">{{ active_child.age }} years</p>
+                  </div>
+                {% endif %}
+                <div class="col-md-6 mb-3">
+                  <h6 class="text-muted">Bracelet Code</h6>
+                  <p class="fw-bold">{{ active_child.bracelet_code }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      <div class="alert alert-info mt-4">
+        <h5>👋 Welcome!</h5>
+        <p>Please add a child to get started</p>
+        <a class="btn btn-primary" href="{{ url_for('add_child') }}">➕ Add New Child</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

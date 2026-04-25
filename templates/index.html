@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% block title %}Welcome - Guardian{% endblock %}
+{% block content %}
+  <div class="home-container">
+    <div class="container">
+      <!-- Hero Section -->
+      <div class="hero-section text-center py-5">
+        <div class="hero-icon mb-4">🛡️</div>
+        <h1 class="display-4 fw-bold mb-3">Guardian</h1>
+        <p class="lead text-muted mb-5">منظومة آمنة لحماية ومراقبة صحة أطفالك</p>
+        
+        {% if current_user.is_authenticated %}
+          <a class="btn btn-primary btn-lg px-5" href="{{ url_for('dashboard') }}">
+            الذهاب للتطبيق
+          </a>
+        {% else %}
+          <div class="mt-5">
+            <a class="btn btn-primary btn-lg px-5 me-3" href="{{ url_for('register') }}">
+              إنشاء حساب جديد
+            </a>
+            <a class="btn btn-outline-primary btn-lg px-5" href="{{ url_for('login') }}">
+              دخول
+            </a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Features Section -->
+      <div class="features-section py-5">
+        <div class="row mt-5">
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">📍</div>
+              <h5 class="fw-bold mb-2">تتبع الموقع</h5>
+              <p class="text-muted small">راقب موقع طفلك في الوقت الفعلي على خريطة آمنة</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">🏥</div>
+              <h5 class="fw-bold mb-2">المعلومات الطبية</h5>
+              <p class="text-muted small">احفظ الأمراض والأدوية والمواعيد الطبية</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">🔔</div>
+              <h5 class="fw-bold mb-2">الإشعارات</h5>
+              <p class="text-muted small">اتصالات وتنبيهات فورية عند الحاجة</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">📱</div>
+              <h5 class="fw-bold mb-2">تطبيق موبايل</h5>
+              <p class="text-muted small">استخدم التطبيق على أي جهاز</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">🔐</div>
+              <h5 class="fw-bold mb-2">آمان عالي</h5>
+              <p class="text-muted small">بيانات مشفرة وحماية كاملة</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4">
+              <div class="feature-icon mb-3">👨‍👩‍👧</div>
+              <h5 class="fw-bold mb-2">لأسرتك</h5>
+              <p class="text-muted small">أضف عدة أطفال بسهولة</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    body {
+      background: #f8f9fa;
+    }
+
+    .home-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 0;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, #5faee9 0%, #5b7fa3 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 60px 30px !important;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+    }
+
+    .hero-icon {
+      font-size: 5rem;
+      animation: bounce 2s infinite;
+    }
+
+    .hero-section h1 {
+      color: white;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-section .lead {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1.3rem;
+    }
+
+    .hero-section .btn-primary {
+      background: rgba(255, 255, 255, 0.25) !important;
+      color: white !important;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-section .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-section .btn-outline-primary {
+      color: white !important;
+      border-color: white !important;
+      font-weight: 600;
+    }
+
+    .hero-section .btn-outline-primary:hover {
+      background: rgba(255, 255, 255, 0.2) !important;
+      border-color: white !important;
+    }
+
+    .features-section {
+      margin-top: 40px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+      height: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(10px);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+    }
+
+    .feature-card h5 {
+      color: #333;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 40px 20px !important;
+      }
+
+      .hero-section h1 {
+        font-size: 2.5rem;
+      }
+
+      .hero-section .lead {
+        font-size: 1.1rem;
+      }
+
+      .hero-icon {
+        font-size: 3rem;
+      }
+
+      .feature-icon {
+        font-size: 2.5rem;
+      }
+
+      .btn-lg {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+      }
+    }
+
+    .phone-frame {
+      background: #f8f9fa !important;
+    }
+
+    .phone-content {
+      padding: 0 !important;
+    }
+  </style>
+{% endblock %}
+

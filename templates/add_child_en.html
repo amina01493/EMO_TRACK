@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Add Child{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  .add-child-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 50px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+  }
+  
+  .add-child-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .add-child-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  
+  .add-child-header p {
+    color: var(--text-light);
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .form-control,
+  .form-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-medium);
+    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    outline: none;
+  }
+  
+  .btn-add-child {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .btn-add-child:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .btn-cancel {
+    background: #f0f0f0;
+    border: none;
+    color: var(--text-dark);
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  .btn-cancel:hover {
+    background: #e0e0e0;
+  }
+</style>
+
+<div class="add-child-container">
+  <div class="add-child-header">
+    <h2>➕ Add New Child</h2>
+    <p>Create a profile for your child</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Child Name</label>
+      <input type="text" class="form-control" name="name" required placeholder="e.g., John">
+    </div>
+
+    <div class="row">
+      <div class="col-6">
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-select" name="gender">
+            <option value="boy">👦 Boy</option>
+            <option value="girl">👧 Girl</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input type="number" class="form-control" name="age" min="1" max="18" placeholder="8">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Bracelet Code (Device ID)</label>
+      <input type="text" class="form-control" name="bracelet_code" placeholder="Device identifier" required>
+    </div>
+
+    <button type="submit" class="btn btn-add-child">Add Child</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-cancel">Cancel</a>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

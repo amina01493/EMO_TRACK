@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% block title %}Safe Zones - {{ child.name }}{% endblock %}
+{% block content %}
+<style>
+  :root {
+    --primary-light: #a8d8ff;
+    --primary-medium: #5faee9;
+    --primary-dark: #5b7fa3;
+    --accent-pink: #ffb3d9;
+    --text-dark: #333;
+    --text-light: #666;
+  }
+  
+  .location-header {
+    margin-bottom: 30px;
+  }
+  
+  .location-header h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+  
+  .card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  }
+  
+  .card-header {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+    font-weight: 600;
+    padding: 15px 20px;
+  }
+  
+  #map {
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .status-badge {
+    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    display: inline-block;
+    font-weight: 600;
+  }
+  
+  .zone-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary-medium);
+  }
+  
+  .zone-item h6 {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  
+  .zone-item small {
+    color: var(--text-light);
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .btn-delete-zone {
+    background: #ff6b6b;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-delete-zone:hover {
+    background: #ff5252;
+    transform: scale(1.05);
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .form-control {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+  
+  .form-control:focus {
+    border-color: var(--primary-medium);
+    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    outline: none;
+  }
+  
+  .btn-add {
+    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
+    color: white;
+  }
+  
+  .btn-geo {
+    background: #6366f1;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-geo:hover {
+    background: #4f46e5;
+    transform: translateY(-2px);
+  }
+  
+  .location-info {
+    background: #f0f8ff;
+    border-left: 4px solid var(--primary-medium);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="location-header">
+    <h2>📍 Safe Zones & Location Tracking</h2>
+    <p class="text-muted">Manage safe zones for {{ child.name }}</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="row">
+    <!-- Map Column -->
+    <div class="col-lg-8 mb-4">
+      <div class="card">
+        <div class="card-header">
+          🗺️ Safe Zones Map
+        </div>
+        <div class="card-body p-0">
+          <div id="map" style="width: 100%; height: 500px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-lg-4">
+      <!-- Current Status -->
+      <div class="card mb-4">
+        <div class="card-header">Current Status</div>
+        <div class="card-body">
+          <div class="location-info">
+            <p class="mb-2"><strong>Status:</strong></p>
+            <div class="status-badge">🛡️ Safe</div>
+          </div>
+          <div class="location-info">
+            <p class="mb-0"><strong>Battery:</strong> 85%</p>
+            <p class="mb-0"><strong>Last Update:</strong> Just now</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safe Zones List -->
+      <div class="card mb-4">
+        <div class="card-header">Safe Zones</div>
+        <div class="card-body">
+          {% if child.locations %}
+            <div class="zones-list">
+              {% for loc in child.locations %}
+                <div class="zone-item">
+                  <h6>📍 {{ loc.name }}</h6>
+                  <small>Latitude: {{ "%.4f"|format(loc.latitude) }}</small>
+                  <small>Longitude: {{ "%.4f"|format(loc.longitude) }}</small>
+                  <small>Radius: <strong>{{ loc.radius }} m</strong></small>
+                  <div class="mt-2">
+                    <form method="post" style="display:inline;">
+                      <input type="hidden" name="action" value="delete_location">
+                      <input type="hidden" name="location_id" value="{{ loc.id }}">
+                      <button type="submit" class="btn btn-delete-zone" onclick="return confirm('Delete this zone?')">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-3">No safe zones configured yet</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Safe Zone Form -->
+  <div class="card mt-4">
+    <div class="card-header">
+      ➕ Add New Safe Zone
+    </div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="action" value="add_location">
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Zone Name</label>
+              <input type="text" class="form-control" name="name" placeholder="e.g., Home, School" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Radius (meters)</label>
+              <input type="number" class="form-control" name="radius" placeholder="e.g., 500" value="500" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Latitude</label>
+              <input type="number" step="0.000001" class="form-control" name="latitude" id="latitude_input" placeholder="Click on map or enter" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label class="form-label">Longitude</label>
+              <input type="number" step="0.000001" class="form-control" name="longitude" id="longitude_input" placeholder="Click on map or enter" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <button type="button" class="btn btn-geo" id="geo_btn">📍 Use My Current Location</button>
+        </div>
+
+        <button type="submit" class="btn btn-add">Add Safe Zone</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+  </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}"></script>
+<script>
+  let map;
+  let selectedMarker = null;
+  const childId = {{ child.id }};
+  
+  function initMap() {
+    const defaultCenter = { lat: 30.0444, lng: 31.2357 }; // Cairo, Egypt
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 13,
+      center: defaultCenter
+    });
+
+    // Load existing locations
+    const locations = {{ child.locations | tojson | safe }};
+    locations.forEach(loc => {
+      const circleCenter = { lat: loc.latitude, lng: loc.longitude };
+      
+      // Draw circle
+      new google.maps.Circle({
+        map: map,
+        center: circleCenter,
+        radius: loc.radius,
+        fillColor: '#5faee9',
+        fillOpacity: 0.25,
+        strokeColor: '#5faee9',
+        strokeWeight: 2,
+      });
+      
+      // Draw marker
+      new google.maps.Marker({
+        map: map,
+        position: circleCenter,
+        title: loc.name,
+      });
+    });
+
+    // Click on map to set coordinates
+    map.addListener('click', (e) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      
+      document.getElementById('latitude_input').value = lat.toFixed(6);
+      document.getElementById('longitude_input').value = lng.toFixed(6);
+      
+      if (selectedMarker) selectedMarker.setMap(null);
+      
+      selectedMarker = new google.maps.Marker({
+        map: map,
+        position: { lat: lat, lng: lng },
+        title: 'Selected Location',
+      });
+    });
+  }
+
+  document.getElementById('geo_btn').addEventListener('click', () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        document.getElementById('latitude_input').value = lat.toFixed(6);
+        document.getElementById('longitude_input').value = lng.toFixed(6);
+        
+        const userLocation = { lat: lat, lng: lng };
+        map.panTo(userLocation);
+        map.setZoom(15);
+        
+        if (selectedMarker) selectedMarker.setMap(null);
+        selectedMarker = new google.maps.Marker({
+          map: map,
+          position: userLocation,
+          title: 'Your Location',
+        });
+      });
+    }
+  });
+
+  // Initialize map when page loads
+  document.addEventListener('DOMContentLoaded', initMap);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
