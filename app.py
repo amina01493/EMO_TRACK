@@ -6,8 +6,15 @@ from itsdangerous import URLSafeTimedSerializer
 import os
 from datetime import datetime, timedelta
 import secrets
+from detection_utils import EmotionDetector
 
 print("Starting app...")
+print("Initializing EmotionDetector...")
+try:
+    emotion_detector = EmotionDetector()
+except Exception as e:
+    print(f"Failed to initialize EmotionDetector: {e}")
+    emotion_detector = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
@@ -445,6 +452,27 @@ def api_get_notifications():
     """الحصول على الإشعارات"""
     # يمكن إضافة نموذج إشعارات لاحقاً
     return jsonify([])
+
+
+@app.route('/api/detect-emotion', methods=['POST'])
+def api_detect_emotion():
+    """Receive image from watch and return detected emotion"""
+    if emotion_detector is None:
+        return jsonify({'success': False, 'error': 'Emotion detector not initialized'}), 500
+        
+    if 'image' not in request.files:
+        return jsonify({'success': False, 'error': 'No image part in request'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No selected image'}), 400
+        
+    try:
+        image_bytes = file.read()
+        result = emotion_detector.detect_emotion(image_bytes)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 @app.route('/child/<int:child_id>/medical-reports', methods=['GET', 'POST'])
