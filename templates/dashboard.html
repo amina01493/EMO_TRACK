@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}لوحة التحكم{% endblock %}
+{% block title %}لوحة التحكم - {{ active_child.name if active_child else 'Guardian' }}{% endblock %}
 {% block content %}
 <style>
   :root {
@@ -69,7 +69,7 @@
     display: flex;
     justify-content: center;
     margin-bottom: 24px;
-    direction: ltr; /* Keep buttons LTR for standard UI feel */
+    direction: ltr;
   }
 
   .preview-toggle {
@@ -104,7 +104,7 @@
     gap: 12px;
     margin-bottom: 32px;
     overflow-x: auto;
-    padding-bottom: 8px;
+    padding: 2px;
     scrollbar-width: none;
   }
 
@@ -129,6 +129,41 @@
     border-color: var(--dash-primary);
     box-shadow: 0 8px 20px rgba(37, 99, 235, 0.24);
     transform: scale(1.05);
+  }
+
+  /* Nav Tabs styling fix */
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px !important;
+    border: 1px solid var(--dash-line) !important;
+    margin: 24px 0 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 18px !important;
+    scrollbar-width: none;
+  }
+
+  .nav-tabs .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 !important;
+    padding: 12px 24px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: var(--dash-muted) !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0;
+  }
+
+  .nav-tabs .nav-link.active {
+    background: var(--dash-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
 
   .stat-card {
@@ -169,6 +204,16 @@
     transform: scale(1.02) translateY(-2px);
     box-shadow: 0 15px 35px rgba(239, 68, 68, 0.32);
   }
+
+  .data-row {
+    padding: 14px;
+    border-bottom: 1px solid var(--dash-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .data-row:last-child { border-bottom: 0; }
 </style>
 
 <div class="dashboard-preview-frame" data-child-id="{{ active_child.id if active_child else '' }}">
@@ -186,7 +231,7 @@
           <a href="{{ url_for('dashboard', child_id=child.id) }}" 
              class="child-tab {% if active_child and active_child.id == child.id %}active{% endif %}">
             <span class="live-icon">
-              <i data-lucide="{% if child.gender == 'boy' %}user{% else %}user{% endif %}"></i>
+              <i data-lucide="user"></i>
             </span>
             {{ child.name }}
           </a>
@@ -200,76 +245,139 @@
 
     {% if active_child %}
       <div class="row g-4">
-        <!-- Status -->
-        <div class="col-lg-8">
-          <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h5 class="fw-bold mb-0">الحالة المباشرة</h5>
-              <div class="d-flex align-items-center">
-                <span class="status-dot"></span>
-                <span class="text-success fw-bold">آمن</span>
-              </div>
-            </div>
+        <div class="col-lg-12">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button"><i data-lucide="layout-dashboard" class="ms-2"></i> نظرة عامة</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#medical" type="button"><i data-lucide="heart-pulse" class="ms-2"></i> الحالة الطبية</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zones" type="button"><i data-lucide="map-pin" class="ms-2"></i> المناطق الآمنة</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recordings" type="button"><i data-lucide="video" class="ms-2"></i> التسجيلات</button></li>
+          </ul>
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="p-3 rounded-4 border border-primary border-opacity-10 bg-primary bg-opacity-5">
-                  <div class="text-muted small mb-1">الموقع الحالي</div>
-                  <div class="fw-bold d-flex align-items-center gap-2">
-                    <i data-lucide="map-pin" class="text-primary"></i>
-                    المنزل 🏠
+          <div class="tab-content">
+            <!-- Overview -->
+            <div class="tab-pane fade show active" id="overview">
+              <div class="row g-4">
+                <div class="col-lg-8">
+                  <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h5 class="fw-bold mb-0">الحالة المباشرة</h5>
+                      <div class="d-flex align-items-center">
+                        <span class="status-dot"></span>
+                        <span id="watch-live-text" class="text-success fw-bold">آمن</span>
+                      </div>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <div class="p-3 rounded-4 border border-primary border-opacity-10 bg-primary bg-opacity-5">
+                          <div class="text-muted small mb-1">الموقع الحالي</div>
+                          <div class="fw-bold d-flex align-items-center gap-2">
+                            <i data-lucide="map-pin" class="text-primary"></i>
+                            المنزل 🏠
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="p-3 rounded-4 border border-danger border-opacity-10 bg-danger bg-opacity-5">
+                          <div class="text-muted small mb-1">نبض القلب</div>
+                          <div class="fw-bold d-flex align-items-center gap-2">
+                            <i data-lucide="heart" class="text-danger"></i>
+                            <span id="heart-rate">85 نبضة/د</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <button class="btn-emergency"><i data-lucide="alert-triangle" class="ms-2"></i> تنبيه طوارئ 🚨</button>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="stat-card">
+                    <h5 class="fw-bold mb-4">نظرة سريعة</h5>
+                    <div class="d-flex flex-column gap-3">
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded-3 bg-warning bg-opacity-10"><i data-lucide="battery" class="text-warning"></i></div>
+                        <div><div class="text-muted small">البطارية</div><div class="fw-bold" id="battery-level">85%</div></div>
+                      </div>
+                      <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded-3 bg-info bg-opacity-10"><i data-lucide="thermometer" class="text-info"></i></div>
+                        <div><div class="text-muted small">درجة الحرارة</div><div class="fw-bold">36.8°C</div></div>
+                      </div>
+                    </div>
+                    <hr class="my-4 opacity-10">
+                    <div class="text-muted small mb-1">آخر رصد للعاطفة:</div>
+                    <div class="fw-bold d-flex align-items-center gap-2">
+                      <span id="emotion-emoji"><i data-lucide="smile"></i></span>
+                      <span id="emotion-text">سعيد</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <div class="p-3 rounded-4 border border-danger border-opacity-10 bg-danger bg-opacity-5">
-                  <div class="text-muted small mb-1">نبض القلب</div>
-                  <div class="fw-bold d-flex align-items-center gap-2">
-                    <i data-lucide="heart" class="text-danger"></i>
-                    85 نبضة/د
+            </div>
+
+            <!-- Medical -->
+            <div class="tab-pane fade" id="medical">
+              <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="fw-bold mb-0">السجل الطبي</h5>
+                  <a href="{{ url_for('child_medical', child_id=active_child.id) }}" class="btn btn-sm btn-primary">تعديل</a>
+                </div>
+                <div class="list-stack">
+                  {% if active_child.diseases %}
+                    {% for disease in active_child.diseases %}
+                      <div class="data-row">
+                        <strong>{{ disease.name }}</strong>
+                        <span class="text-muted small">{{ disease.description or 'لا توجد ملاحظات' }}</span>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <p class="text-center py-4 text-muted">لا توجد حالات مسجلة</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Zones -->
+            <div class="tab-pane fade" id="zones">
+              <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="fw-bold mb-0">المناطق الآمنة</h5>
+                  <a href="{{ url_for('child_locations', child_id=active_child.id) }}" class="btn btn-sm btn-primary">إدارة</a>
+                </div>
+                {% if active_child.locations %}
+                  <div class="list-stack">
+                    {% for loc in active_child.locations %}
+                      <div class="data-row">
+                        <span><i data-lucide="map-pin" class="ms-2 text-primary"></i> {{ loc.name }}</span>
+                        <span class="badge bg-success bg-opacity-10 text-success">{{ loc.radius|int }}م</span>
+                      </div>
+                    {% endfor %}
                   </div>
-                </div>
+                {% else %}
+                  <p class="text-center py-4 text-muted">لم يتم تحديد مناطق آمنة بعد</p>
+                {% endif %}
               </div>
             </div>
 
-            <button class="btn-emergency">
-              <i data-lucide="alert-triangle" class="ms-2"></i>
-              تنبيه طوارئ 🚨
-            </button>
-          </div>
-        </div>
-
-        <!-- Info -->
-        <div class="col-lg-4">
-          <div class="stat-card">
-            <h5 class="fw-bold mb-4">نظرة سريعة</h5>
-            <div class="d-flex flex-column gap-3">
-              <div class="d-flex align-items-center gap-3">
-                <div class="p-2 rounded-3 bg-warning bg-opacity-10">
-                  <i data-lucide="battery" class="text-warning"></i>
+            <!-- Recordings -->
+            <div class="tab-pane fade" id="recordings">
+              <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="fw-bold mb-0">التسجيلات الأخيرة</h5>
+                  <a href="{{ url_for('daily_recordings', child_id=active_child.id) }}" class="btn btn-sm btn-primary">المكتبة</a>
                 </div>
-                <div>
-                  <div class="text-muted small">البطارية</div>
-                  <div class="fw-bold">85%</div>
-                </div>
-              </div>
-              <div class="d-flex align-items-center gap-3">
-                <div class="p-2 rounded-3 bg-info bg-opacity-10">
-                  <i data-lucide="thermometer" class="text-info"></i>
-                </div>
-                <div>
-                  <div class="text-muted small">درجة الحرارة</div>
-                  <div class="fw-bold">36.8°C</div>
-                </div>
+                {% if recent_recordings %}
+                  <div class="list-stack">
+                    {% for rec in recent_recordings %}
+                      <div class="data-row">
+                        <span><i data-lucide="video" class="ms-2"></i> {{ rec.recording_type }}</span>
+                        <span class="text-muted small">{{ rec.uploaded_at.strftime('%Y-%m-%d') }}</span>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-center py-4 text-muted">لا توجد تسجيلات حتى الآن</p>
+                {% endif %}
               </div>
             </div>
-            
-            <hr class="my-4 opacity-10">
-            
-            <a href="{{ url_for('child_medical', child_id=active_child.id) }}" class="btn btn-outline-primary w-100 rounded-4 py-3 fw-bold">
-              <i data-lucide="file-text" class="ms-2"></i>
-              السجل الطبي
-            </a>
           </div>
         </div>
       </div>
@@ -285,4 +393,38 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% if active_child %}
+<script>
+  const childId = {{ active_child.id }};
+  const iconMap = {
+    happy: 'smile', sad: 'frown', angry: 'angry', fear: 'cloud-lightning',
+    surprise: 'sparkles', neutral: 'meh', disgust: 'frown', waiting: 'loader-2'
+  };
+
+  function updateStatus() {
+    fetch(`/api/live-status?child_id=${childId}`)
+      .then(res => res.json())
+      .then(data => {
+        const isLive = data.is_live;
+        const emotion = data.emotion?.toLowerCase() || 'waiting';
+        const iconName = iconMap[emotion] || 'loader-2';
+        
+        const emojiEl = document.getElementById('emotion-emoji');
+        if (emojiEl) {
+          emojiEl.innerHTML = `<i data-lucide="${iconName}"></i>`;
+          lucide.createIcons({ root: emojiEl });
+        }
+        
+        const textEl = document.getElementById('emotion-text');
+        if (textEl) textEl.innerText = emotion === 'happy' ? 'سعيد' : emotion;
+        
+        const watchText = document.getElementById('watch-live-text');
+        if (watchText) watchText.innerText = isLive ? 'متصل' : 'غير متصل';
+      });
+  }
+
+  setInterval(updateStatus, 3000);
+  updateStatus();
+</script>
+{% endif %}
 {% endblock %}

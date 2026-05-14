@@ -442,26 +442,47 @@
 
   .nav-tabs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
-    padding: 0;
-    border: 0 !important;
-    margin: 16px 0 12px;
+    padding: 6px !important;
+    border: 1px solid var(--dash-line) !important;
+    margin: 24px 0 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 14px !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-tabs .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0 !important;
-    border: 1px solid var(--dash-line) !important;
-    border-radius: var(--dash-radius) !important;
-    background: rgba(255, 255, 255, 0.72) !important;
+    padding: 10px 20px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
     color: var(--dash-muted) !important;
     font-weight: 800 !important;
     white-space: nowrap;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0;
+  }
+
+  .nav-tabs .nav-link:hover:not(.active) {
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: var(--dash-primary) !important;
+    transform: translateY(-1px);
   }
 
   .nav-tabs .nav-link.active {
     background: var(--dash-primary) !important;
     color: #fff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
 
   .list-stack {
@@ -713,10 +734,30 @@
         <div class="tw-mb-8"></div>
 
         <ul class="nav nav-tabs" role="tablist">
-          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
-          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#medical" type="button">Medical</button></li>
-          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#zones" type="button">Zones</button></li>
-          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recordings" type="button">Recordings</button></li>
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+              <i data-lucide="layout-dashboard" class="tw-w-4 tw-h-4"></i>
+              Overview
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#medical" type="button">
+              <i data-lucide="heart-pulse" class="tw-w-4 tw-h-4"></i>
+              Medical
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#zones" type="button">
+              <i data-lucide="map-pin" class="tw-w-4 tw-h-4"></i>
+              Zones
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#recordings" type="button">
+              <i data-lucide="video" class="tw-w-4 tw-h-4"></i>
+              Recordings
+            </button>
+          </li>
         </ul>
 
         <div class="tab-content">
@@ -997,6 +1038,11 @@
         const formattedEmotion = emotion.charAt(0).toUpperCase() + emotion.slice(1);
         const iconName = iconMap[emotion.toLowerCase()] || 'loader-2';
         const isPulse = iconName === 'loader-2';
+        
+        // Extract missing variables from data
+        const isLive = data.is_live;
+        const lastSeen = formatAge(data.last_seen_seconds);
+        const confidence = data.confidence;
 
         setIcon('emotion-emoji', iconName, isPulse);
         setText('emotion-text', formattedEmotion);
