@@ -7,7 +7,7 @@ class EmotionDetector:
     def __init__(self):
         # Load YOLO model
         print("Loading YOLOv8 model...")
-        self.model = YOLO("yolov8n.pt")
+        self.model = YOLO("models/yolov8n.pt")
         print("YOLOv8 model loaded.")
         
     def detect_emotion(self, image_bytes):

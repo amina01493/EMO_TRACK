@@ -3,101 +3,89 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --primary: #4A90E2;
+    --secondary: #67E8F9;
+    --accent: #F472B6;
+    --background: #F8FAFC;
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --text-main: #1E293B;
+    --text-muted: #64748B;
   }
   
-  * {
-    font-size: 13px !important;
+  body {
+    background-color: var(--background);
+    font-family: 'Inter', sans-serif;
   }
-  
-  h2 { font-size: 1.25rem !important; }
-  h3 { font-size: 1.1rem !important; }
-  h5 { font-size: 0.95rem !important; }
-  h6 { font-size: 0.85rem !important; }
-  p { font-size: 0.9rem !important; }
-  
-  .btn-theme {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%) !important;
-    border: none !important;
-    color: white !important;
-    transition: all 0.3s ease;
-    font-size: 0.9rem !important;
+
+  .fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+    opacity: 0;
   }
-  
-  .btn-theme:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white !important;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  
-  .child-btn {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 5px;
-    border-radius: 10px;
-    background: #f0f0f0;
-    text-decoration: none;
-    color: var(--text-dark);
-    border: 2px solid transparent;
-    transition: all 0.3s;
-    font-weight: 500;
-    font-size: 0.85rem !important;
-  }
-  
-  .child-btn:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-  }
-  
-  .child-btn.active {
-    background: var(--primary-medium);
-    color: white;
-    border-color: var(--primary-dark);
-  }
-  
+
   .status-card {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(10px);
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
   
   .status-card:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(74, 144, 226, 0.15);
+    background: rgba(255, 255, 255, 0.95);
   }
-  
-  .status-card div {
-    font-size: 2rem !important;
+
+  .btn-theme {
+    background: linear-gradient(135deg, var(--primary) 0%, #357ABD 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 10px 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+    transition: all 0.3s ease !important;
   }
-  
-  .nav-tabs .nav-link {
-    color: var(--text-light);
-    border: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    font-size: 0.85rem !important;
-    padding: 0.5rem 0.75rem !important;
+
+  .child-btn {
+    padding: 12px 24px;
+    border-radius: 16px;
+    background: white;
+    color: var(--text-muted);
+    border: 2px solid transparent;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
-  
-  .nav-tabs .nav-link:hover {
-    color: var(--primary-medium);
-    border-bottom-color: var(--primary-light);
+
+  .child-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 20px rgba(74, 144, 226, 0.3);
   }
-  
-  .nav-tabs .nav-link.active {
-    color: var(--primary-medium);
-    background: none;
-    border-bottom-color: var(--primary-medium);
+
+  .live-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #10B981;
+    border-radius: 50%;
+    margin-right: 8px;
+    box-shadow: 0 0 10px #10B981;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+  }
     font-weight: 600;
   }
   
@@ -124,15 +112,15 @@
   }
 </style>
 
-<div class="container-fluid pt-3 pb-5" style="background: transparent;">
+<div class="container-fluid pt-3 pb-5 fade-in" style="background: transparent;">
   <div class="mb-3">
-    <h2 class="fw-bold text-white mb-3" style="font-size: 1.3rem !important;">Dashboard</h2>
+    <h2 class="fw-bold text-white mb-3" style="font-size: 1.6rem !important;">Guardian Dashboard</h2>
 
     <!-- Child Selector -->
 
     {% if children %}
       <div class="mb-4">
-        <h6 class="text-muted mb-3">Select Child:</h6>
+        <h6 class="text-white-50 mb-3">Select Child:</h6>
         <div class="child-selector">
           {% for child in children %}
             <a href="{{ url_for('dashboard', child_id=child.id) }}" 
@@ -140,7 +128,7 @@
               {% if child.gender == 'boy' %}👦{% else %}👧{% endif %} {{ child.name }}
             </a>
           {% endfor %}
-          <a href="{{ url_for('add_child') }}" class="child-btn">
+          <a href="{{ url_for('add_child') }}" class="child-btn" style="background: rgba(255,255,255,0.1); color: white; border: 1px dashed rgba(255,255,255,0.3);">
             ➕ Add Child
           </a>
         </div>
@@ -148,30 +136,113 @@
     {% endif %}
 
     {% if active_child %}
+      <!-- Live Camera Feed -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="status-card p-0 overflow-hidden fade-in" style="position: relative; background: #000; height: 350px; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <img id="live-feed" src="/static/latest_capture.jpg" style="max-height: 100%; max-width: 100%; object-fit: contain; transition: all 0.5s ease;" onerror="this.src='https://via.placeholder.com/400x300?text=Waiting+for+Watch...'">
+            <div style="position: absolute; top: 15px; left: 15px; background: rgba(220, 20, 60, 0.8); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+              <span style="display: inline-block; width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 5px; animation: blink 1s infinite;"></span>
+              Live Feed
+            </div>
+            <div id="overlay-emotion" style="position: absolute; bottom: 15px; right: 15px; background: rgba(255,255,255,0.9); padding: 5px 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+              <span id="overlay-emoji" style="font-size: 1.5rem; vertical-align: middle;">⏳</span>
+              <span id="overlay-text" style="font-weight: bold; color: var(--primary-medium);">Detecting...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+      </style>
+
       <!-- Status Cards -->
       <div class="row mb-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
           <div class="status-card text-center">
             <div style="font-size: 2.5rem; margin-bottom: 15px;">🛡️</div>
             <h6 class="text-muted mb-2">Status</h6>
             <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">Safe</p>
           </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
+          <div class="status-card text-center" id="emotion-card">
+            <div style="font-size: 2.5rem; margin-bottom: 15px;" id="emotion-emoji">😊</div>
+            <h6 class="text-muted mb-2">Live Emotion</h6>
+            <p id="emotion-text" style="color: #ffb3d9; font-size: 1.5rem; font-weight: 700; margin: 0;">Happy</p>
+            <small id="emotion-time" class="text-muted" style="font-size: 0.7rem !important;">Last seen: --:--</small>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
           <div class="status-card text-center">
             <div style="font-size: 2.5rem; margin-bottom: 15px;">❤️</div>
             <h6 class="text-muted mb-2">Heart Rate</h6>
             <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85 BPM</p>
           </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
           <div class="status-card text-center">
             <div style="font-size: 2.5rem; margin-bottom: 15px;">🔋</div>
-            <h6 class="text-muted mb-2">Battery</h6>
+            <h6 class="text-muted mb-2">Watch Battery</h6>
             <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85%</p>
           </div>
         </div>
       </div>
+
+      <script>
+        const emojiMap = {
+          'happy': '😊',
+          'sad': '😢',
+          'angry': '😡',
+          'fear': '😨',
+          'surprise': '😲',
+          'neutral': '😐',
+          'disgust': '🤢'
+        };
+
+        function updateLiveStatus() {
+          // Refresh the live feed image
+          const liveFeed = document.getElementById('live-feed');
+          if (liveFeed) {
+            liveFeed.src = '/static/latest_capture.jpg?t=' + new Date().getTime();
+          }
+
+          fetch('/api/live-status')
+            .then(response => response.json())
+            .then(data => {
+              const emotionText = document.getElementById('emotion-text');
+              const emotionEmoji = document.getElementById('emotion-emoji');
+              const emotionTime = document.getElementById('emotion-time');
+              const overlayText = document.getElementById('overlay-text');
+              const overlayEmoji = document.getElementById('overlay-emoji');
+              
+              if (data.emotion && data.emotion !== 'Unknown') {
+                const formattedEmotion = data.emotion.charAt(0).toUpperCase() + data.emotion.slice(1);
+                const emoji = emojiMap[data.emotion.toLowerCase()] || '🤔';
+                
+                emotionText.innerText = formattedEmotion;
+                emotionEmoji.innerText = emoji;
+                emotionTime.innerText = 'Last seen: ' + data.timestamp;
+                
+                if (overlayText) overlayText.innerText = formattedEmotion;
+                if (overlayEmoji) overlayEmoji.innerText = emoji;
+                
+                // Highlight color based on emotion
+                if (['sad', 'angry', 'fear'].includes(data.emotion.toLowerCase())) {
+                  emotionText.style.color = '#ff6b6b';
+                } else {
+                  emotionText.style.color = '#ffb3d9';
+                }
+              }
+            })
+            .catch(err => console.error('Error fetching live status:', err));
+        }
+
+        // Poll every 2 seconds
+        setInterval(updateLiveStatus, 2000);
+        updateLiveStatus();
+      </script>
 
       <!-- Navigation Tabs -->
       <ul class="nav nav-tabs mb-4" role="tablist">

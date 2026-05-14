@@ -1,0 +1,11 @@
+ultralytics
+opencv-python
+torch
+torchvision
+Pillow
+tqdm
+deepface
+tf-keras
+Flask
+Flask-SQLAlchemy
+Flask-Login

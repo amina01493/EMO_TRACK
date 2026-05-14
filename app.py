@@ -1,12 +1,50 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
 import os
+import socket
+import threading
+import time
 from datetime import datetime, timedelta
 import secrets
 from detection_utils import EmotionDetector
+import numpy as np
+import cv2
+import json
+
+
+def start_discovery_broadcast():
+    """Broadcasts the server's presence over UDP for auto-discovery."""
+    DISCOVERY_PORT = 5005
+    MAGIC_MESSAGE = "EMO_TRACK_DISCOVERY"
+    
+    def broadcast():
+        print(f"Discovery broadcast started on port {DISCOVERY_PORT}...")
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            while True:
+                try:
+                    # Get the current local IP
+                    s_temp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    try:
+                        s_temp.connect(("8.8.8.8", 80))
+                        local_ip = s_temp.getsockname()[0]
+                    except Exception:
+                        local_ip = socket.gethostbyname(socket.gethostname())
+                    finally:
+                        s_temp.close()
+                    
+                    message = f"{MAGIC_MESSAGE}:{local_ip}:5000"
+                    print(f"Discovery broadcast: {message}")
+                    s.sendto(message.encode(), ('<broadcast>', DISCOVERY_PORT))
+                except Exception as e:
+                    print(f"Broadcast error: {e}")
+                time.sleep(5)
+
+    thread = threading.Thread(target=broadcast, daemon=True)
+    thread.start()
 
 print("Starting app...")
 print("Initializing EmotionDetector...")
@@ -54,6 +92,9 @@ class Child(db.Model):
     locations = db.relationship('Location', backref='child', lazy=True, cascade='all, delete-orphan')
     alerts = db.relationship('Alert', backref='child', lazy=True, cascade='all, delete-orphan')
 
+
+# Global state for live detections
+latest_detections = {}
 
 class Disease(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -147,27 +188,44 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        phone_number = request.form.get('phone_number', '').strip()
-        child_name = request.form.get('child_name', '').strip()
-        gender = request.form.get('gender', 'boy')
-        bracelet_code = request.form.get('bracelet_code', '').strip()
-        child_age = request.form.get('child_age', type=int)
+        # Support both JSON (watch) and Form (web)
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username', '').strip()
+            email = data.get('email', '').strip().lower()
+            password = data.get('password', '')
+            phone_number = data.get('phone_number', '').strip()
+            # Watch might not send these, provide defaults
+            child_name = data.get('child_name', f"{username}'s Child").strip()
+            gender = data.get('gender', 'boy')
+            bracelet_code = data.get('bracelet_code', f"BR-{email.split('@')[0]}").strip()
+            child_age = data.get('child_age', 5)
+        else:
+            username = request.form.get('username', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+            phone_number = request.form.get('phone_number', '').strip()
+            child_name = request.form.get('child_name', '').strip()
+            gender = request.form.get('gender', 'boy')
+            bracelet_code = request.form.get('bracelet_code', '').strip()
+            child_age = request.form.get('child_age', type=int)
         
         if not all([username, email, password, phone_number, child_name, bracelet_code]):
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Missing required fields'}), 400
             flash('Please fill all fields', 'warning')
             return redirect(url_for('register'))
         
         if User.query.filter((User.username == username) | (User.email == email)).first():
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Username or email already exists'}), 409
             flash('Username or email already exists', 'danger')
             return redirect(url_for('register'))
         
         if Child.query.filter_by(bracelet_code=bracelet_code).first():
+            if request.is_json:
+                return jsonify({'success': False, 'error': 'Bracelet code already exists'}), 409
             flash('Bracelet code already exists', 'danger')
             return redirect(url_for('register'))
         
@@ -180,6 +238,9 @@ def register():
         db.session.add(child)
         db.session.commit()
         
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'Registration successful'})
+            
         flash('Registration successful. Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register_en.html')
@@ -188,15 +249,34 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'Already authenticated'})
         return redirect(url_for('dashboard'))
+        
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
+        # Support both JSON (watch) and Form (web)
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username', '').strip()
+            password = data.get('password', '')
+        else:
+            username = request.form.get('username', '').strip()
+            password = request.form.get('password', '')
+            
+        # Check username or email
         user = User.query.filter_by(username=username).first()
+        if not user:
+            user = User.query.filter_by(email=username).first()
+            
         if user and user.check_password(password):
             login_user(user)
+            if request.is_json:
+                return jsonify({'success': True, 'username': user.username})
             flash('Logged in successfully.', 'success')
             return redirect(url_for('dashboard'))
+            
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
         flash('Invalid credentials', 'danger')
     return render_template('login_new.html')
 
@@ -469,10 +549,80 @@ def api_detect_emotion():
         
     try:
         image_bytes = file.read()
+        
+        # Save latest image for the web dashboard to display
+        try:
+            with open("static/latest_capture.jpg", "wb") as f:
+                f.write(image_bytes)
+        except Exception as e:
+            print(f"Error saving latest capture: {e}")
+            
         result = emotion_detector.detect_emotion(image_bytes)
+        
+        # Update live status
+        if result.get('success'):
+            emotion_data = result['data']
+            # We use a simple strategy: latest detection is stored
+            # Ideally we would map bracelet_code to child_id
+            latest_detections['global'] = {
+                'emotion': emotion_data['emotion'],
+                'confidence': float(emotion_data['confidence']),
+                'timestamp': datetime.now().strftime("%H:%M:%S")
+            }
+            
+            # POP-UP: Show detection on server desktop
+            try:
+                nparr = np.frombuffer(image_bytes, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if img is not None:
+                    # Draw bbox
+                    x1, y1, x2, y2 = emotion_data['bbox']
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    label = f"{emotion_data['emotion']} ({emotion_data['confidence']:.1f}%)"
+                    cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                    
+                    cv2.imshow("EMO_TRACK Live Detection", img)
+                    cv2.waitKey(1) # Refresh window
+            except Exception as e:
+                print(f"Error showing pop-up: {e}")
+
         return jsonify(result)
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/live-status', methods=['GET'])
+def api_live_status():
+    """Get the latest detected emotion for the web dashboard."""
+    return jsonify(latest_detections.get('global', {'emotion': 'Unknown', 'timestamp': '--:--:--'}))
+
+
+@app.route('/api/logs', methods=['POST'])
+def api_logs():
+    """Receive logs from the watch for debugging."""
+    data = request.json
+    log_msg = data.get('log', '')
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("watch_logs.txt", "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {log_msg}\n")
+    return jsonify({'success': True})
+
+
+@app.route('/api/app-version', methods=['GET'])
+def api_app_version():
+    """Return the latest available version information."""
+    return jsonify({'version': '1.0.0', 'build_number': 1})
+
+
+@app.route('/api/latest-apk', methods=['GET'])
+def api_latest_apk():
+    """Serve the latest built APK file."""
+    apk_dir = os.path.join(os.getcwd(), 'build', 'app', 'outputs', 'flutter-apk')
+    # Use the split APK for the watch
+    target_apk = 'app-armeabi-v7a-release.apk'
+    if not os.path.exists(os.path.join(apk_dir, target_apk)):
+        return jsonify({'error': 'APK not found on server'}), 404
+    return send_from_directory(apk_dir, target_apk, as_attachment=True, mimetype='application/vnd.android.package-archive')
 
 
 @app.route('/child/<int:child_id>/medical-reports', methods=['GET', 'POST'])
@@ -629,4 +779,7 @@ def share_recording(recording_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    print("--- Starting Discovery Broadcast Thread ---")
+    start_discovery_broadcast()
+    print("--- Starting Flask Server ---")
+    app.run(debug=True, host='0.0.0.0', use_reloader=False)
