@@ -3,29 +3,141 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-panel-strong: #ffffff;
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-primary-dark: #1d4ed8;
+    --dash-radius: 12px;
   }
   
+  /* Layout Overrides to prevent 'squeezed' look */
+  .phone-frame,
+  .phone-content,
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .phone-frame {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
   body {
-    background: linear-gradient(135deg, #c5e1f5 0%, #a8d8ff 35%, #5faee9 65%, #ffb3d9 100%);
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
     min-height: 100vh;
-    padding: 40px 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0 !important;
+  }
+
+  /* Preview Frame Logic */
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 20px auto 48px;
+    padding: 10px !important;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  .auth-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 20px 15px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+  }
+
+  body.dashboard-mobile-preview .auth-shell {
+    width: 100%;
+    min-height: auto;
+    padding: 40px 10px;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
   }
   
   .register-container {
-    max-width: 500px;
+    max-width: 650px;
+    width: 100%;
     margin: 0 auto;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: var(--dash-panel);
+    border-radius: 24px;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
     padding: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--dash-line);
     backdrop-filter: blur(20px);
+  }
+
+  body.dashboard-mobile-preview .register-container {
+    padding: 40px 24px;
+    border-radius: 20px;
   }
   
   .register-header {
@@ -34,25 +146,37 @@
   }
   
   .register-header h2 {
-    font-size: 1.8rem;
-    color: var(--text-dark);
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 2.2rem;
+    color: var(--dash-ink);
+    font-weight: 850;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
   }
   
   .register-header p {
-    color: var(--text-light);
-    font-size: 0.95rem;
+    color: var(--dash-muted);
+    font-size: 1rem;
+    font-weight: 500;
   }
   
   .form-section-title {
     font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--primary-medium);
+    font-weight: 800;
+    color: var(--dash-primary);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 25px;
+    letter-spacing: 0.1em;
+    margin-top: 32px;
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .form-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--dash-line);
   }
   
   .form-section-title:first-of-type {
@@ -60,12 +184,12 @@
   }
   
   .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
   
   .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
+    font-weight: 700;
+    color: var(--dash-ink);
     margin-bottom: 8px;
     display: block;
     font-size: 0.9rem;
@@ -73,146 +197,182 @@
   
   .form-control,
   .form-select {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border: 1.5px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--dash-ink);
   }
   
   .form-control:focus,
   .form-select:focus {
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     outline: none;
+    background: #fff;
   }
   
   .btn-register {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    border: none;
+    background: var(--dash-primary);
+    border: 0;
     color: white;
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 600;
+    padding: 16px;
+    border-radius: var(--dash-radius);
+    font-weight: 800;
     width: 100%;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
   
   .btn-register:hover {
+    background: var(--dash-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
   }
   
   .divider {
-    border: none;
+    border: 0;
     height: 1px;
-    background: #e0e0e0;
-    margin: 30px 0;
+    background: var(--dash-line);
+    margin: 40px 0;
   }
   
   .register-footer {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 32px;
+    font-size: 0.95rem;
   }
   
   .register-footer p {
-    color: var(--text-light);
-    font-size: 0.9rem;
-    margin: 0;
+    color: var(--dash-muted);
+    font-weight: 500;
   }
   
   .register-footer a {
-    color: var(--primary-medium);
+    color: var(--dash-primary);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
   }
   
   .register-footer a:hover {
     text-decoration: underline;
   }
+
+  .alert {
+    border: 0;
+    border-radius: var(--dash-radius);
+    margin-bottom: 24px;
+    padding: 16px;
+    font-weight: 600;
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
+  }
+  
+  @media (max-width: 600px) {
+    .register-container {
+      padding: 30px 20px;
+      border-radius: 20px;
+    }
+    
+    .register-header h2 {
+      font-size: 1.8rem;
+    }
+  }
 </style>
 
-<div class="register-container">
-  <div class="register-header">
-    <h2>Create Account</h2>
-    <p>Join us to keep your children safe</p>
-  </div>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <form method="POST">
-    <div class="form-section-title">Guardian Information</div>
-    
-    <div class="form-group">
-      <label class="form-label">Username</label>
-      <input type="text" class="form-control" name="username" required placeholder="Choose a username">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Email</label>
-      <input type="email" class="form-control" name="email" required placeholder="your@email.com">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input type="password" class="form-control" name="password" required placeholder="Strong password">
-    </div>
-    
-    <div class="form-group">
-      <label class="form-label">Phone Number</label>
-      <input type="tel" class="form-control" name="phone_number" required placeholder="+1234567890">
-    </div>
-
-    <hr class="divider">
-    
-    <div class="form-section-title">First Child Information</div>
-
-    <div class="form-group">
-      <label class="form-label">Child Name</label>
-      <input type="text" class="form-control" name="child_name" required placeholder="e.g., John">
-    </div>
-
-    <div class="row">
-      <div class="col-6">
-        <div class="form-group">
-          <label class="form-label">Gender</label>
-          <select class="form-select" name="gender">
-            <option value="boy">👦 Boy</option>
-            <option value="girl">👧 Girl</option>
-          </select>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="form-group">
-          <label class="form-label">Age</label>
-          <input type="number" class="form-control" name="child_age" min="1" max="18" placeholder="8">
-        </div>
+<div class="dashboard-preview-frame">
+  <div class="auth-shell">
+    <div class="preview-toolbar" aria-label="Auth preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
       </div>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">Bracelet Code (Device ID)</label>
-      <input type="text" class="form-control" name="bracelet_code" placeholder="Device identifier" required>
+    <div class="register-container">
+      <div class="register-header">
+        <h2>Create Account</h2>
+        <p>Join us to keep your children safe</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="form-section-title">Guardian Information</div>
+        
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" name="username" required placeholder="Choose a username">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" name="email" required placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-control" name="password" required placeholder="Strong password">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-control" name="phone_number" required placeholder="+1234567890">
+        </div>
+
+        <hr class="divider">
+        
+        <div class="form-section-title">First Child Information</div>
+
+        <div class="form-group">
+          <label class="form-label">Child Name</label>
+          <input type="text" class="form-control" name="child_name" required placeholder="e.g., John">
+        </div>
+
+        <div class="row">
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="form-select" name="gender">
+                <option value="boy">Boy</option>
+                <option value="girl">Girl</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="form-group">
+              <label class="form-label">Age</label>
+              <input type="number" class="form-control" name="child_age" min="1" max="18" placeholder="8">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bracelet Code (Device ID)</label>
+          <input type="text" class="form-control" name="bracelet_code" placeholder="Device identifier" required>
+        </div>
+
+        <button type="submit" class="btn btn-register">Create Account</button>
+      </form>
+
+      <div class="register-footer">
+        <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
+      </div>
     </div>
-
-    <button type="submit" class="btn btn-register">Create Account</button>
-  </form>
-
-  <div class="register-footer">
-    <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
   </div>
 </div>
 

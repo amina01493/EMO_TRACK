@@ -623,11 +623,22 @@
       <div class="child-selector mb-3" aria-label="Child selector">
         {% for child in children %}
           <a href="{{ url_for('dashboard', child_id=child.id) }}" class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %}">
-            <span>{% if child.gender == 'boy' %}👦{% else %}👧{% endif %}</span>
+            <span>
+              <span class="live-icon">
+                {% if child.gender == 'boy' %}
+                  <i data-lucide="user" class="tw-w-5 tw-h-5"></i>
+                {% else %}
+                  <i data-lucide="user" class="tw-w-5 tw-h-5"></i>
+                {% endif %}
+              </span>
+            </span>
             <span>{{ child.name }}</span>
           </a>
         {% endfor %}
-        <a href="{{ url_for('add_child') }}" class="child-btn">＋ Add child</a>
+        <a href="{{ url_for('add_child') }}" class="child-btn">
+          <span class="live-icon"><i data-lucide="plus" class="tw-w-5 tw-h-5"></i></span>
+          Add child
+        </a>
       </div>
     {% endif %}
 
@@ -662,7 +673,9 @@
               <p>{{ active_child.bracelet_code }} · monitoring {{ active_child.name }}</p>
             </div>
             <div class="emotion-overlay">
-              <span id="overlay-emoji" class="emoji">⏳</span>
+              <span id="overlay-emoji" class="emoji">
+                <span class="live-icon pulse"><i data-lucide="loader-2" class="tw-w-10 tw-h-10"></i></span>
+              </span>
               <strong id="overlay-text">Detecting</strong>
               <small id="overlay-confidence">Confidence pending</small>
             </div>
@@ -677,7 +690,12 @@
           </div>
           <div class="metric-card" id="emotion-card">
             <div class="label">Live Emotion</div>
-            <div class="value"><span id="emotion-emoji">⏳</span> <span id="emotion-text">Waiting</span></div>
+            <div class="value">
+              <span id="emotion-emoji">
+                <span class="live-icon pulse"><i data-lucide="loader-2" class="tw-w-6 tw-h-6"></i></span>
+              </span> 
+              <span id="emotion-text">Waiting</span>
+            </div>
             <div class="hint" id="emotion-time">Last seen: --:--</div>
           </div>
           <div class="metric-card">
@@ -851,7 +869,9 @@
           </div>
           <div class="panel-body">
             <div class="watch-device mb-3">
-              <div class="watch-face" id="watch-face-emoji">⌚</div>
+              <div class="watch-face" id="watch-face-emoji">
+                <span class="live-icon"><i data-lucide="watch"></i></span>
+              </div>
               <div>
                 <strong>{{ active_child.name }}'s watch</strong>
                 <p class="empty-copy mb-0">Camera, emotion detection, location, and care signals are connected to this dashboard.</p>
@@ -931,16 +951,24 @@
 {% if active_child %}
 <script>
   const childId = {{ active_child.id }};
-  const emojiMap = {
-    happy: '😊',
-    sad: '😢',
-    angry: '😠',
-    fear: '😨',
-    surprise: '😲',
-    neutral: '😐',
-    disgust: '🤢'
+  const iconMap = {
+    happy: 'smile',
+    sad: 'frown',
+    angry: 'angry',
+    fear: 'cloud-lightning',
+    surprise: 'sparkles',
+    neutral: 'meh',
+    disgust: 'frown',
+    waiting: 'loader-2'
   };
   const riskEmotions = ['sad', 'angry', 'fear'];
+
+  function setIcon(id, iconName, pulse = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<span class="live-icon ${pulse ? 'pulse' : ''}"><i data-lucide="${iconName}"></i></span>`;
+    if (window.lucide) lucide.createIcons();
+  }
 
   function setText(id, value) {
     const el = document.getElementById(id);
@@ -967,15 +995,13 @@
       .then(data => {
         const emotion = data.emotion && data.emotion !== 'Unknown' ? data.emotion : 'waiting';
         const formattedEmotion = emotion.charAt(0).toUpperCase() + emotion.slice(1);
-        const emoji = emojiMap[emotion.toLowerCase()] || '⏳';
-        const confidence = Number(data.confidence || 0);
-        const lastSeen = formatAge(data.last_seen_seconds);
-        const isLive = Boolean(data.is_live);
+        const iconName = iconMap[emotion.toLowerCase()] || 'loader-2';
+        const isPulse = iconName === 'loader-2';
 
-        setText('emotion-emoji', emoji);
+        setIcon('emotion-emoji', iconName, isPulse);
         setText('emotion-text', formattedEmotion);
         setText('emotion-time', `Last seen: ${data.timestamp || '--:--'} (${lastSeen})`);
-        setText('overlay-emoji', emoji);
+        setIcon('overlay-emoji', iconName, isPulse);
         setText('overlay-text', formattedEmotion);
         setText('overlay-confidence', confidence ? `Confidence ${confidence.toFixed(1)}%` : 'Confidence pending');
         setText('summary-emotion', confidence ? `${formattedEmotion} detected by the watch at ${data.timestamp} with ${confidence.toFixed(1)}% confidence.` : 'Waiting for the next watch frame.');
@@ -983,7 +1009,7 @@
         setText('device-connection', isLive ? 'Live' : 'Waiting');
         setText('device-last-frame', lastSeen);
         setText('watch-live-text', isLive ? 'Watch live' : 'Waiting for watch');
-        setText('watch-face-emoji', emoji);
+        setIcon('watch-face-emoji', isLive ? iconName : 'watch', false);
 
         const pill = document.getElementById('watch-live-pill');
         if (pill) pill.classList.toggle('offline', !isLive);

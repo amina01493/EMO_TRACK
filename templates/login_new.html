@@ -3,61 +3,189 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-panel-strong: #ffffff;
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-primary-dark: #1d4ed8;
+    --dash-radius: 12px;
   }
   
+  /* Layout Overrides to prevent 'squeezed' look */
+  .phone-frame,
+  .phone-content,
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .phone-frame {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
   body {
-    background: linear-gradient(135deg, #c5e1f5 0%, #a8d8ff 35%, #5faee9 65%, #ffb3d9 100%);
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
     min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0 !important;
+  }
+
+  /* Preview Frame Logic */
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 20px auto 48px;
+    padding: 10px !important;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  .auth-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 20px 15px 60px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
+    min-height: calc(100vh - 100px);
+  }
+
+  body.dashboard-mobile-preview .auth-shell {
+    width: 100%;
+    min-height: auto;
+    padding: 40px 10px;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
   }
   
   .login-wrapper {
     display: flex;
     width: 100%;
-    max-width: 900px;
-    height: 600px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 1000px;
+    min-height: 600px;
+    background: var(--dash-panel);
+    border-radius: 24px;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--dash-line);
     backdrop-filter: blur(20px);
+  }
+
+  body.dashboard-mobile-preview .login-wrapper {
+    flex-direction: column;
+    max-width: 100%;
+    min-height: auto;
   }
   
   .login-illustration {
-    flex: 1;
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    flex: 1.2;
+    background: linear-gradient(135deg, var(--dash-primary) 0%, var(--dash-primary-dark) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-illustration::before {
+    content: "";
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+    top: -25%;
+    left: -25%;
   }
   
   .illustration-content {
     text-align: center;
+    position: relative;
+    z-index: 2;
+    padding: 40px;
+  }
+
+  body.dashboard-mobile-preview .illustration-content {
+    padding: 40px 20px;
   }
   
   .illustration-content h2 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin-bottom: 20px;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
   
   .illustration-content p {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     opacity: 0.9;
     line-height: 1.6;
+    font-weight: 500;
   }
   
   .login-form-container {
@@ -66,158 +194,177 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background: var(--dash-panel-strong);
+  }
+
+  body.dashboard-mobile-preview .login-form-container {
+    padding: 40px 24px;
   }
   
   .login-form-header h1 {
-    font-size: 2rem;
-    color: var(--text-dark);
-    margin-bottom: 10px;
-    font-weight: 700;
+    font-size: 2.2rem;
+    color: var(--dash-ink);
+    margin-bottom: 12px;
+    font-weight: 850;
+    letter-spacing: -0.02em;
   }
   
   .login-form-header p {
-    color: var(--text-light);
-    font-size: 0.95rem;
-    margin-bottom: 30px;
+    color: var(--dash-muted);
+    font-size: 1rem;
+    margin-bottom: 32px;
+    font-weight: 500;
   }
   
   .form-group {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
   }
   
   .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
+    font-weight: 700;
+    color: var(--dash-ink);
     margin-bottom: 8px;
     display: block;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   
   .form-control {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border: 1.5px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    padding: 14px 16px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #f8fbff;
+    color: var(--dash-ink);
   }
   
   .form-control:focus {
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     outline: none;
+    background: #fff;
   }
   
   .btn-login {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    border: none;
+    background: var(--dash-primary);
+    border: 0;
     color: white;
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 600;
+    padding: 16px;
+    border-radius: var(--dash-radius);
+    font-weight: 800;
     width: 100%;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
     cursor: pointer;
+    margin-top: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
   
   .btn-login:hover {
+    background: var(--dash-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white;
-  }
-  
-  .btn-login:active {
-    transform: translateY(0);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
   }
   
   .login-footer {
     text-align: center;
-    margin-top: 25px;
-    font-size: 0.9rem;
-  }
-  
-  .login-footer p {
-    color: var(--text-light);
-  }
-  
-  .login-footer a {
-    color: var(--primary-medium);
-    text-decoration: none;
-    font-weight: 600;
-  }
-  
-  .login-footer a:hover {
-    text-decoration: underline;
+    margin-top: 32px;
+    font-size: 0.95rem;
   }
   
   .alert {
-    border: none;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    border: 0;
+    border-radius: var(--dash-radius);
+    margin-bottom: 24px;
+    padding: 16px;
+    font-weight: 600;
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
+  }
+
+  .alert-success {
+    background: rgba(22, 163, 74, 0.1);
+    color: #166534;
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: 850px) {
     .login-wrapper {
       flex-direction: column;
       height: auto;
-      max-width: 100%;
+      max-width: 450px;
     }
     
     .login-illustration {
-      padding: 40px 20px;
-      min-height: 200px;
+      padding: 60px 20px;
+      min-height: 240px;
     }
     
     .login-form-container {
-      padding: 40px 20px;
+      padding: 40px 30px;
     }
     
     .login-form-header h1 {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
     }
   }
 </style>
 
-<div class="login-wrapper">
-  <div class="login-illustration">
-    <div class="illustration-content">
-      <div style="font-size: 4rem; margin-bottom: 20px;">👶</div>
-      <h2>Child Guard</h2>
-      <p>Keep your children safe<br>with real-time tracking</p>
+<div class="dashboard-preview-frame">
+  <div class="auth-shell">
+    <div class="preview-toolbar" aria-label="Auth preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
     </div>
-  </div>
-  
-  <div class="login-form-container">
-    <div class="login-form-header">
-      <h1>Welcome Back</h1>
-      <p>Sign in to your account</p>
-    </div>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+    <div class="login-wrapper">
+      <div class="login-illustration">
+        <div class="illustration-content">
+          <div style="font-size: 4rem; margin-bottom: 20px;">
+            <span class="live-icon pulse"><i data-lucide="baby" style="width: 80px; height: 80px;"></i></span>
           </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    
-    <form method="POST">
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <input type="text" class="form-control" name="username" required>
+          <h2>Child Guard</h2>
+          <p>Keep your children safe<br>with real-time tracking</p>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-control" name="password" required>
+      
+      <div class="login-form-container">
+        <div class="login-form-header">
+          <h1>Welcome Back</h1>
+          <p>Sign in to your account</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        <form method="POST">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" name="username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-control" name="password" required>
+          </div>
+          <button type="submit" class="btn btn-login">Sign In</button>
+        </form>
+        
+        <div class="login-footer">
+          <p>Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p>
+          <p style="margin-top: 10px;"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
+        </div>
       </div>
-      <button type="submit" class="btn btn-login">Sign In</button>
-    </form>
-    
-    <div class="login-footer">
-      <p>Don't have an account? <a href="{{ url_for('register') }}">Create one</a></p>
-      <p style="margin-top: 10px;"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
     </div>
   </div>
 </div>

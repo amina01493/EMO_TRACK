@@ -144,13 +144,36 @@
       .phone-content {
         background: transparent;
       }
+
+      /* Live Icon Animations */
+      .live-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .live-icon:hover {
+        transform: scale(1.2) rotate(5deg);
+      }
+
+      .live-icon.pulse {
+        animation: icon-pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes icon-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+      }
     </style>
   </head>
   <body>
     <div class="phone-frame">
       <nav class="navbar navbar-expand sticky-top">
         <div class="container-fluid px-3">
-          <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">👶 Child Guard</a>
+          <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+            <span class="live-icon"><i data-lucide="baby" class="me-1"></i></span> Child Guard
+          </a>
           <div class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
               <span class="nav-link small" style="font-size: 0.8rem !important; font-weight: 500;">{{ current_user.username }}</span>
@@ -182,9 +205,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script>
+      // Initialize Lucide
+      lucide.createIcons();
+
       // تسجيل Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
@@ -320,4 +346,3 @@
     </script>
   </body>
 </html>
-
