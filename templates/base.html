@@ -165,6 +165,109 @@
         0%, 100% { transform: scale(1); opacity: 1; }
         50% { transform: scale(1.1); opacity: 0.8; }
       }
+
+      /* Premium Floating Nav */
+      .floating-nav {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 24px;
+        padding: 8px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        display: flex;
+        gap: 8px;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        width: max-content;
+        max-width: calc(100vw - 32px);
+      }
+
+      body.dashboard-mobile-preview .floating-nav {
+        position: absolute; /* Relative to the phone frame */
+        bottom: 20px;
+        width: calc(100% - 40px);
+        max-width: 390px;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        color: var(--dash-muted);
+        text-decoration: none !important;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .nav-item i {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-item span {
+        font-size: 10px !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        opacity: 0.8;
+      }
+
+      .nav-item:hover {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--dash-primary);
+      }
+
+      .nav-item:hover i {
+        transform: translateY(-2px);
+      }
+
+      .nav-item.active {
+        background: var(--dash-primary);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+      }
+
+      .nav-item.active i {
+        transform: scale(1.1);
+      }
+
+      .nav-item.active span {
+        opacity: 1;
+      }
+
+      /* Active Indicator Dot */
+      .nav-item.active::after {
+        content: "";
+        position: absolute;
+        bottom: 6px;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #fff;
+      }
+
+      @media (max-width: 600px) {
+        .floating-nav {
+          padding: 6px;
+          gap: 4px;
+          bottom: 16px;
+        }
+        .nav-item {
+          width: 58px;
+          height: 58px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -208,8 +311,19 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script>
+      // Helper function to safely create icons
+      function refreshIcons() {
+        if (window.lucide) {
+          lucide.createIcons({
+            attrs: {
+              class: 'lucide-icon'
+            }
+          });
+        }
+      }
+
       // Initialize Lucide
-      lucide.createIcons();
+      refreshIcons();
 
       // تسجيل Service Worker
       if ('serviceWorker' in navigator) {
@@ -304,42 +418,59 @@
           desktopPreviewBtn?.addEventListener('click', () => applyPreviewMode('desktop'));
           mobilePreviewBtn?.addEventListener('click', () => applyPreviewMode('mobile'));
 
-          if (childId && !document.querySelector('.tool-nav')) {
+          if (childId && !document.querySelector('.floating-nav')) {
             const nav = document.createElement('nav');
-            nav.className = 'tool-nav tw-grid tw-grid-cols-2 lg:tw-grid-cols-5 tw-gap-2 tw-mb-4';
+            nav.className = 'floating-nav';
             nav.setAttribute('aria-label', 'Child dashboard navigation');
             const items = [
-              ['Dashboard', `/dashboard?child_id=${childId}`],
-              ['Camera', `/child/${childId}/camera`],
-              ['Recordings', `/child/${childId}/daily-recordings`],
-              ['Safe zones', `/child/${childId}/locations`],
-              ['Care plan', `/child/${childId}/medical`],
+              ['Dashboard', `/dashboard?child_id=${childId}`, 'layout-dashboard'],
+              ['Camera', `/child/${childId}/camera`, 'camera'],
+              ['Recordings', `/child/${childId}/daily-recordings`, 'video'],
+              ['Zones', `/child/${childId}/locations`, 'map-pin'],
+              ['Care', `/child/${childId}/medical`, 'heart-pulse'],
             ];
             const currentPath = window.location.pathname;
-            nav.innerHTML = items.map(([label, href]) => {
+            nav.innerHTML = items.map(([label, href, icon]) => {
               const path = href.split('?')[0];
               const isActive = currentPath === path || (label === 'Dashboard' && currentPath === '/dashboard');
-              const classes = [
-                'tw-flex',
-                'tw-min-h-10',
-                'tw-items-center',
-                'tw-justify-center',
-                'tw-rounded-lg',
-                'tw-border',
-                'tw-px-3',
-                'tw-py-2',
-                'tw-text-center',
-                'tw-text-sm',
-                'tw-font-bold',
-                'tw-no-underline',
-                'tw-transition',
-                isActive
-                  ? 'active tw-border-blue-600 tw-bg-blue-600 tw-text-white'
-                  : 'tw-border-blue-100 tw-bg-white/80 tw-text-slate-800 hover:tw-border-blue-600 hover:tw-bg-blue-600 hover:tw-text-white'
-              ].join(' ');
-              return `<a href="${href}" class="${classes}">${label}</a>`;
+              return `
+                <a href="${href}" class="nav-item ${isActive ? 'active' : ''}" title="${label}">
+                  <i data-lucide="${icon}"></i>
+                  <span>${label}</span>
+                </a>
+              `;
             }).join('');
-            document.querySelector('.preview-toolbar')?.insertAdjacentElement('afterend', nav);
+            
+            // Append to body or phone frame
+            if (document.body.classList.contains('dashboard-preview-enabled')) {
+              document.querySelector('.dashboard-preview-frame')?.appendChild(nav);
+            } else {
+              document.body.appendChild(nav);
+            }
+            
+            if (window.lucide) {
+              lucide.createIcons({
+                root: nav,
+                attrs: {
+                  class: 'lucide-icon'
+                }
+              });
+            }
+            
+            // GSAP Entrance
+            if (window.gsap) {
+              gsap.fromTo(nav.querySelectorAll('.nav-item'), 
+                { y: 40, opacity: 0 },
+                { 
+                  y: 0, 
+                  opacity: 1, 
+                  duration: 0.6, 
+                  stagger: 0.1, 
+                  ease: 'back.out(1.7)',
+                  delay: 0.2
+                }
+              );
+            }
           }
         }
       });

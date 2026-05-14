@@ -710,12 +710,7 @@
           </div>
         </div>
 
-        <div class="action-row">
-          <a class="dashboard-action danger" href="{{ url_for('camera', child_id=active_child.id) }}">Open camera</a>
-          <a class="dashboard-action" href="{{ url_for('daily_recordings', child_id=active_child.id) }}">Recordings</a>
-          <a class="dashboard-action secondary" href="{{ url_for('child_locations', child_id=active_child.id) }}">Safe zones</a>
-          <a class="dashboard-action secondary" href="{{ url_for('child_medical', child_id=active_child.id) }}">Care plan</a>
-        </div>
+        <div class="tw-mb-8"></div>
 
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
@@ -967,7 +962,12 @@
     const el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = `<span class="live-icon ${pulse ? 'pulse' : ''}"><i data-lucide="${iconName}"></i></span>`;
-    if (window.lucide) lucide.createIcons();
+    if (window.lucide) {
+      lucide.createIcons({
+        root: el,
+        attrs: { class: 'lucide-icon' }
+      });
+    }
   }
 
   function setText(id, value) {
