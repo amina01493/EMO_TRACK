@@ -233,7 +233,16 @@
   }
 </style>
 
-<div class="container-fluid py-4">
+<div class="child-tool-preview" data-child-id="{{ child.id }}">
+  <div class="child-tool-shell">
+    <div class="preview-toolbar" aria-label="Dashboard preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
+
+    <div class="container-fluid py-4">
   <div class="recordings-header">
     <h2>📹 Daily Recordings for {{ child.name }}</h2>
     <p class="text-muted">Upload videos, photos, and audio from your child's daily activities</p>
@@ -369,6 +378,8 @@
 
   <div class="mt-4">
     <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
+  </div>
+    </div>
   </div>
 </div>
 

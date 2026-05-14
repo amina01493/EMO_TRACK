@@ -649,6 +649,7 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
     try {
       final image = await _cameraController!.takePicture();
       var request = http.MultipartRequest('POST', Uri.parse('http://$serverIp:5000/api/detect-emotion'));
+      request.fields['source'] = 'watch-app';
       request.files.add(await http.MultipartFile.fromPath('image', image.path));
       
       var response = await request.send();
@@ -1342,6 +1343,7 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       final image = await _controller!.takePicture();
       var request = http.MultipartRequest('POST', Uri.parse('http://$serverIp:5000/api/detect-emotion'));
+      request.fields['source'] = 'watch-app';
       request.files.add(await http.MultipartFile.fromPath('image', image.path));
       
       var response = await request.send();

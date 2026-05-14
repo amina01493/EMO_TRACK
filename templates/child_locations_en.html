@@ -153,7 +153,16 @@
   }
 </style>
 
-<div class="container-fluid py-4">
+<div class="child-tool-preview" data-child-id="{{ child.id }}">
+  <div class="child-tool-shell">
+    <div class="preview-toolbar" aria-label="Dashboard preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
+
+    <div class="container-fluid py-4">
   <div class="location-header">
     <h2>📍 Safe Zones & Location Tracking</h2>
     <p class="text-muted">Manage safe zones for {{ child.name }}</p>
@@ -281,15 +290,52 @@
   <div class="mt-4">
     <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
   </div>
+    </div>
+  </div>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}"></script>
 <script>
   let map;
   let selectedMarker = null;
   const childId = {{ child.id }};
+  const locations = {{ child.locations | tojson | safe }};
+  const hasGoogleMapsKey = {{ 'true' if config.GOOGLE_MAPS_API_KEY and config.GOOGLE_MAPS_API_KEY != 'YOUR_GOOGLE_MAPS_API_KEY' else 'false' }};
+
+  function setCoordinates(lat, lng) {
+    document.getElementById('latitude_input').value = lat.toFixed(6);
+    document.getElementById('longitude_input').value = lng.toFixed(6);
+  }
+
+  function renderFallbackMap(reason) {
+    const mapEl = document.getElementById('map');
+    const zoneList = locations.length
+      ? `<div class="fallback-zones">${locations.map(loc => `<span class="fallback-zone">${loc.name} · ${Number(loc.radius || 0).toFixed(0)}m</span>`).join('')}</div>`
+      : '<p>No safe zones yet. Click this panel or use your current location to fill coordinates.</p>';
+
+    mapEl.className = 'map-fallback';
+    mapEl.innerHTML = `
+      <strong>Map preview unavailable</strong>
+      <p>${reason}</p>
+      ${zoneList}
+      <p><strong>Tip:</strong> click anywhere on this preview to place a sample Cairo coordinate, or use the current-location button below.</p>
+    `;
+
+    mapEl.addEventListener('click', event => {
+      const rect = mapEl.getBoundingClientRect();
+      const xRatio = (event.clientX - rect.left) / rect.width;
+      const yRatio = (event.clientY - rect.top) / rect.height;
+      const lat = 30.0444 + (0.04 - yRatio * 0.08);
+      const lng = 31.2357 + (xRatio * 0.08 - 0.04);
+      setCoordinates(lat, lng);
+    });
+  }
   
   function initMap() {
+    if (!window.google || !window.google.maps) {
+      renderFallbackMap('Google Maps did not load. Add a valid GOOGLE_MAPS_API_KEY to enable the interactive map.');
+      return;
+    }
+
     const defaultCenter = { lat: 30.0444, lng: 31.2357 }; // Cairo, Egypt
     map = new google.maps.Map(document.getElementById('map'), {
       zoom: 13,
@@ -297,7 +343,6 @@
     });
 
     // Load existing locations
-    const locations = {{ child.locations | tojson | safe }};
     locations.forEach(loc => {
       const circleCenter = { lat: loc.latitude, lng: loc.longitude };
       
@@ -324,9 +369,7 @@
     map.addListener('click', (e) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      
-      document.getElementById('latitude_input').value = lat.toFixed(6);
-      document.getElementById('longitude_input').value = lng.toFixed(6);
+      setCoordinates(lat, lng);
       
       if (selectedMarker) selectedMarker.setMap(null);
       
@@ -343,26 +386,43 @@
       navigator.geolocation.getCurrentPosition((position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
-        document.getElementById('latitude_input').value = lat.toFixed(6);
-        document.getElementById('longitude_input').value = lng.toFixed(6);
-        
+        setCoordinates(lat, lng);
+
         const userLocation = { lat: lat, lng: lng };
-        map.panTo(userLocation);
-        map.setZoom(15);
-        
-        if (selectedMarker) selectedMarker.setMap(null);
-        selectedMarker = new google.maps.Marker({
-          map: map,
-          position: userLocation,
-          title: 'Your Location',
-        });
+        if (map && window.google && window.google.maps) {
+          map.panTo(userLocation);
+          map.setZoom(15);
+
+          if (selectedMarker) selectedMarker.setMap(null);
+          selectedMarker = new google.maps.Marker({
+            map: map,
+            position: userLocation,
+            title: 'Your Location',
+          });
+        }
       });
     }
   });
 
   // Initialize map when page loads
-  document.addEventListener('DOMContentLoaded', initMap);
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!hasGoogleMapsKey) {
+      renderFallbackMap('The project is still using the placeholder Google Maps API key.');
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}';
+    script.async = true;
+    script.defer = true;
+    script.onload = initMap;
+    script.onerror = () => renderFallbackMap('Google Maps could not be loaded. Check the API key, billing, and Maps JavaScript API access.');
+    document.head.appendChild(script);
+
+    window.gm_authFailure = () => {
+      renderFallbackMap('Google Maps rejected the current API key. Check the key restrictions and billing status.');
+    };
+  });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

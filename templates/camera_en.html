@@ -238,7 +238,16 @@
   }
 </style>
 
-<div class="camera-container">
+<div class="child-tool-preview" data-child-id="{{ child.id }}">
+  <div class="child-tool-shell">
+    <div class="preview-toolbar" aria-label="Dashboard preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
+
+    <div class="camera-container">
   <div class="camera-header">
     <h2>📷 Camera</h2>
     <p style="font-size: 0.9rem !important; margin: 0;">Recording for {{ child.name }}</p>
@@ -290,6 +299,8 @@
   <!-- Back Button -->
   <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
     <a href="{{ url_for('daily_recordings', child_id=child.id) }}" class="btn btn-outline-secondary" style="font-size: 0.9rem !important;">← Back to Recordings</a>
+  </div>
+    </div>
   </div>
 </div>
 

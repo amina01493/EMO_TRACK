@@ -358,7 +358,22 @@ def dashboard():
     else:
         active_child = current_user.children[0] if current_user.children else None
     
-    return render_template('dashboard_en.html', active_child=active_child, children=current_user.children)
+    recent_recordings = []
+    medical_reports = []
+    recent_alerts = []
+    if active_child:
+        recent_recordings = DailyRecording.query.filter_by(child_id=active_child.id).order_by(DailyRecording.uploaded_at.desc()).limit(3).all()
+        medical_reports = MedicalReport.query.filter_by(child_id=active_child.id).order_by(MedicalReport.uploaded_at.desc()).limit(3).all()
+        recent_alerts = Alert.query.filter_by(child_id=active_child.id).order_by(Alert.timestamp.desc()).limit(5).all()
+
+    return render_template(
+        'dashboard_en.html',
+        active_child=active_child,
+        children=current_user.children,
+        recent_recordings=recent_recordings,
+        medical_reports=medical_reports,
+        recent_alerts=recent_alerts,
+    )
 
 
 @app.route('/add-child', methods=['GET', 'POST'])
@@ -454,18 +469,29 @@ def child_locations(child_id):
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
-        location_name = request.form.get('location_name', '').strip()
+        action = request.form.get('action', 'add_location')
+        if action == 'delete_location':
+            location_id = request.form.get('location_id', type=int)
+            location = Location.query.get(location_id)
+            if location and location.child_id == child.id:
+                db.session.delete(location)
+                db.session.commit()
+                flash('Safe zone deleted', 'success')
+            return redirect(url_for('child_locations', child_id=child.id))
+
+        location_name = (request.form.get('location_name') or request.form.get('name') or '').strip()
         latitude = request.form.get('latitude', type=float)
         longitude = request.form.get('longitude', type=float)
         radius = request.form.get('radius', default=200, type=float)
         
-        if location_name and latitude and longitude:
+        if location_name and latitude is not None and longitude is not None:
             location = Location(child_id=child.id, name=location_name, latitude=latitude, longitude=longitude, radius=radius)
             db.session.add(location)
             db.session.commit()
             flash('Safe zone added', 'success')
-        else:
-            flash('Please fill all required fields', 'warning')
+            return redirect(url_for('child_locations', child_id=child.id))
+
+        flash('Please fill all required fields', 'warning')
     
     google_maps_api_key = app.config['GOOGLE_MAPS_API_KEY']
     return render_template('child_locations_en.html', child=child, google_maps_api_key=google_maps_api_key)
@@ -564,11 +590,23 @@ def api_detect_emotion():
             emotion_data = result['data']
             # We use a simple strategy: latest detection is stored
             # Ideally we would map bracelet_code to child_id
-            latest_detections['global'] = {
+            detection_payload = {
                 'emotion': emotion_data['emotion'],
                 'confidence': float(emotion_data['confidence']),
-                'timestamp': datetime.now().strftime("%H:%M:%S")
+                'timestamp': datetime.now().strftime("%H:%M:%S"),
+                'received_at': datetime.now().isoformat(timespec='seconds'),
+                'source': request.form.get('source', 'watch-app')
             }
+            latest_detections['global'] = detection_payload
+
+            bracelet_code = request.form.get('bracelet_code')
+            child_id = request.form.get('child_id')
+            if bracelet_code:
+                child = Child.query.filter_by(bracelet_code=bracelet_code).first()
+                if child:
+                    latest_detections[str(child.id)] = detection_payload
+            elif child_id:
+                latest_detections[str(child_id)] = detection_payload
             
             # POP-UP: Show detection on server desktop
             try:
@@ -594,7 +632,36 @@ def api_detect_emotion():
 @app.route('/api/live-status', methods=['GET'])
 def api_live_status():
     """Get the latest detected emotion for the web dashboard."""
-    return jsonify(latest_detections.get('global', {'emotion': 'Unknown', 'timestamp': '--:--:--'}))
+    child_id = request.args.get('child_id')
+    data = latest_detections.get(str(child_id)) if child_id else None
+    data = data or latest_detections.get('global')
+
+    if not data:
+        return jsonify({
+            'emotion': 'Unknown',
+            'confidence': 0,
+            'timestamp': '--:--:--',
+            'received_at': None,
+            'is_live': False,
+            'last_seen_seconds': None,
+            'source': 'watch-app'
+        })
+
+    last_seen_seconds = None
+    is_live = False
+    received_at = data.get('received_at')
+    if received_at:
+        try:
+            last_seen = datetime.fromisoformat(received_at)
+            last_seen_seconds = int((datetime.now() - last_seen).total_seconds())
+            is_live = last_seen_seconds <= 15
+        except ValueError:
+            pass
+
+    response = dict(data)
+    response['is_live'] = is_live
+    response['last_seen_seconds'] = last_seen_seconds
+    return jsonify(response)
 
 
 @app.route('/api/logs', methods=['POST'])
@@ -684,6 +751,20 @@ def daily_recordings(child_id):
     
     if request.method == 'POST':
         try:
+            action = request.form.get('action')
+            if action == 'delete_recording':
+                recording_id = request.form.get('recording_id', type=int)
+                recording = DailyRecording.query.get(recording_id)
+                if recording and recording.child_id == child.id:
+                    if recording.file_path:
+                        full_path = os.path.join('static', recording.file_path)
+                        if os.path.exists(full_path):
+                            os.remove(full_path)
+                    db.session.delete(recording)
+                    db.session.commit()
+                    flash('Recording deleted', 'success')
+                return redirect(url_for('daily_recordings', child_id=child_id))
+
             recording_type = request.form.get('recording_type', 'video')
             description = request.form.get('description', '').strip()
             file = request.files.get('file')
