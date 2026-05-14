@@ -288,7 +288,7 @@
         </div>
         <h2>Live Camera</h2>
         <p class="text-muted">Monitoring {{ child.name }}</p>
-        <div class="mt-3">
+        <div class="mt-3" id="recordingIndicator" style="display: none;">
           <span class="recording-indicator">
             <i data-lucide="circle" style="width: 12px; height: 12px; fill: currentColor;"></i>
             RECORDING LIVE
@@ -298,7 +298,7 @@
 
       <div class="video-container">
         <video id="video" autoplay playsinline></video>
-        <div class="recording-timer">
+        <div class="recording-timer" id="timerContainer" style="display: none;">
           <span id="timer">00:00</span>
         </div>
       </div>
@@ -307,7 +307,10 @@
         <button class="btn-camera btn-switch" id="switchCameraBtn" title="Switch Camera">
           <i data-lucide="refresh-cw"></i>
         </button>
-        <button class="btn-camera btn-stop" id="stopRecordingBtn" title="Stop Recording">
+        <button class="btn-camera btn-confirm" id="startRecordingBtn" title="Start Recording" style="background: #22c55e;">
+          <i data-lucide="play" style="fill: white;"></i>
+        </button>
+        <button class="btn-camera btn-stop" id="stopRecordingBtn" title="Stop Recording" style="display: none;">
           <i data-lucide="square" style="fill: white;"></i>
         </button>
       </div>
@@ -366,9 +369,6 @@
       
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = stream;
-      
-      // Start recording automatically
-      startRecording();
     } catch (err) {
       showStatus('❌ Camera access denied. Please allow camera permissions.', 'error');
       console.error('Error accessing camera:', err);
@@ -377,10 +377,13 @@
 
   function startRecording() {
     try {
+      if (!stream) {
+        showStatus('❌ Camera not ready', 'error');
+        return;
+      }
       recordedChunks = [];
       recordingStartTime = Date.now();
       
-      // Get supported MIME type
       const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
         : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
@@ -390,22 +393,21 @@
       mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunks.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onerror = (event) => {
-        console.error('Recording error:', event.error);
-        showStatus('❌ Recording error occurred', 'error');
+        if (event.data.size > 0) recordedChunks.push(event.data);
       };
       
       mediaRecorder.start();
       startTimer();
+      
+      // UI Updates
+      document.getElementById('recordingIndicator').style.display = 'block';
+      document.getElementById('timerContainer').style.display = 'block';
+      document.getElementById('startRecordingBtn').style.display = 'none';
+      document.getElementById('stopRecordingBtn').style.display = 'flex';
+      
       showStatus('✅ Recording started!', 'success');
     } catch (err) {
       showStatus('❌ Failed to start recording', 'error');
-      console.error('Recording error:', err);
     }
   }
 
@@ -420,6 +422,8 @@
     }, 1000);
   }
 
+  document.getElementById('startRecordingBtn').addEventListener('click', startRecording);
+
   switchCameraBtn.addEventListener('click', async () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -429,6 +433,12 @@
       mediaRecorder.stop();
     }
     
+    // Hide recording UI on switch
+    document.getElementById('recordingIndicator').style.display = 'none';
+    document.getElementById('timerContainer').style.display = 'none';
+    document.getElementById('startRecordingBtn').style.display = 'flex';
+    document.getElementById('stopRecordingBtn').style.display = 'none';
+    
     currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
     startCamera();
   });
@@ -436,11 +446,12 @@
   stopRecordingBtn.addEventListener('click', () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
-      
       if (timerInterval) clearInterval(timerInterval);
       
+      document.getElementById('recordingIndicator').style.display = 'none';
+      document.getElementById('stopRecordingBtn').style.display = 'none';
+      
       showStatus('⏸️ Recording stopped. Review and upload below.', 'info');
-      stopRecordingBtn.disabled = true;
       switchCameraBtn.disabled = true;
     }
   });

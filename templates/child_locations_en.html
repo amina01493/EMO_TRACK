@@ -130,6 +130,13 @@
     border: 1px solid var(--dash-line);
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    height: 500px;
+  }
+
+  @media (max-width: 768px) {
+    #map {
+      height: 300px !important;
+    }
   }
 
   .map-fallback {
@@ -145,11 +152,13 @@
   }
 
   .status-widget {
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 20px;
-    padding: 20px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 22px;
+    padding: 24px;
     border: 1px solid var(--dash-line);
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
 
   .zone-item {
@@ -286,56 +295,69 @@
       {% endif %}
     {% endwith %}
 
-    <div class="row">
-      <div class="col-lg-8 mb-4">
+    <div class="row g-4">
+      <div class="col-lg-8">
         <div class="location-card">
-          <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
-            <i data-lucide="map" style="width: 20px; height: 20px;"></i>
+          <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="map" style="width: 20px; height: 20px; color: var(--dash-primary);"></i>
             Interactive Map
           </h5>
-          <div id="map" style="width: 100%; height: 500px;"></div>
+          <div id="map"></div>
         </div>
       </div>
 
       <div class="col-lg-4">
         <!-- Status Widget -->
         <div class="status-widget">
-          <h6 class="fw-bold mb-3">Live Status</h6>
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <span class="live-icon"><i data-lucide="shield-check" style="color: #22c55e;"></i></span>
-            <span class="fw-bold" style="color: #22c55e;">In Safe Zone</span>
+          <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="activity" style="width: 18px; height: 18px; color: #22c55e;"></i>
+            Live Status
+          </h6>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="status-pulse" style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);"></div>
+            <span class="fw-bold h5 mb-0" style="color: #22c55e;">In Safe Zone</span>
           </div>
-          <div class="text-muted small">
-            <p class="mb-1"><i data-lucide="battery" class="me-1" style="width: 14px; height: 14px;"></i> Battery: 85%</p>
-            <p class="mb-0"><i data-lucide="clock" class="me-1" style="width: 14px; height: 14px;"></i> Last Seen: Just now</p>
+          <div class="list-stack">
+            <div class="d-flex align-items-center gap-2 text-muted small mb-2">
+              <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
+              <span>Battery: 85%</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-muted small">
+              <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+              <span>Last Seen: Just now</span>
+            </div>
           </div>
         </div>
 
         <!-- Zones List -->
         <div class="location-card">
-          <h6 class="fw-bold mb-3">Saved Zones</h6>
+          <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="list" style="width: 18px; height: 18px; color: var(--dash-primary);"></i>
+            Saved Zones
+          </h6>
           {% if child.locations %}
-            {% for loc in child.locations %}
-              <div class="zone-item">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <span class="fw-bold">{{ loc.name }}</span>
-                  <form method="post" class="d-inline">
-                    <input type="hidden" name="action" value="delete_location">
-                    <input type="hidden" name="location_id" value="{{ loc.id }}">
-                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this zone?')">
-                      <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-                    </button>
-                  </form>
+            <div class="zone-stack">
+              {% for loc in child.locations %}
+                <div class="zone-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <span class="fw-bold d-block mb-1">{{ loc.name }}</span>
+                      <span class="text-muted small"><i data-lucide="maximize" class="me-1" style="width: 12px;"></i> {{ loc.radius }}m radius</span>
+                    </div>
+                    <form method="post" class="m-0">
+                      <input type="hidden" name="action" value="delete_location">
+                      <input type="hidden" name="location_id" value="{{ loc.id }}">
+                      <button type="submit" class="btn-delete" onclick="return confirm('Delete this zone?')">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <div class="text-muted small">
-                  <p class="mb-1">{{ loc.radius }}m radius</p>
-                  <p class="mb-0">{{ "%.4f"|format(loc.latitude) }}, {{ "%.4f"|format(loc.longitude) }}</p>
-                </div>
-              </div>
-            {% endfor %}
+              {% endfor %}
+            </div>
           {% else %}
-            <div class="text-center py-4 opacity-50">
-              <i data-lucide="map-pin-off" class="mb-2"></i>
+            <div class="text-center py-5 opacity-50">
+              <i data-lucide="map-pin-off" class="mb-2" style="width: 48px; height: 48px;"></i>
               <p class="small mb-0">No zones yet</p>
             </div>
           {% endif %}

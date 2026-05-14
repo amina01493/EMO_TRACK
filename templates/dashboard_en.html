@@ -119,9 +119,10 @@
 
   body.dashboard-mobile-preview .dashboard-shell {
     width: 100%;
+    padding: 100px 10px 140px !important; /* Extra padding to ensure visibility */
     max-height: 804px;
-    padding: 34px 2px 24px;
     overflow-y: auto;
+    background: #f8fbff;
   }
 
   body.dashboard-mobile-preview .dashboard-topbar,
@@ -1080,13 +1081,17 @@
     setInterval(updateWatchStatus, 2500);
 
     if (window.gsap) {
-      gsap.from('.panel, .metric-card, .card', {
-        duration: 0.55,
-        y: 12,
+      // Simplified animation to avoid opacity issues in hidden tabs
+      gsap.from('.stat-card, .metric-card', {
+        duration: 0.6,
+        y: 15,
         opacity: 0,
-        stagger: 0.05,
-        ease: 'power2.out'
+        stagger: 0.08,
+        ease: 'power3.out',
+        clearProps: "all"
       });
+      // Ensure all potential panels are visible immediately
+      gsap.set('.panel, .card, .tab-pane', { opacity: 1, visibility: 'visible' });
     }
   });
 </script>

@@ -750,11 +750,15 @@ def daily_recordings(child_id):
         return redirect(url_for('dashboard'))
     
     if request.method == 'POST':
+        # Logging for debugging
+        with open('recordings_debug.txt', 'a') as f:
+            f.write(f"[{datetime.now()}] POST to daily_recordings. Action: {request.form.get('action')}, ID: {request.form.get('recording_id')}\n")
+            
         try:
             action = request.form.get('action')
             if action == 'delete_recording':
                 recording_id = request.form.get('recording_id', type=int)
-                recording = DailyRecording.query.get(recording_id)
+                recording = db.session.get(DailyRecording, recording_id)
                 if recording and recording.child_id == child.id:
                     if recording.file_path:
                         full_path = os.path.join('static', recording.file_path)
@@ -762,8 +766,10 @@ def daily_recordings(child_id):
                             os.remove(full_path)
                     db.session.delete(recording)
                     db.session.commit()
-                    flash('Recording deleted', 'success')
-                return redirect(url_for('daily_recordings', child_id=child_id))
+                    flash('Recording deleted successfully', 'success')
+                else:
+                    flash('Recording not found or unauthorized', 'danger')
+                return redirect(url_for('daily_recordings', child_id=child.id))
 
             recording_type = request.form.get('recording_type', 'video')
             description = request.form.get('description', '').strip()
