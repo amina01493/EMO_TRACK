@@ -214,5 +214,53 @@
       padding: 0 !important;
     }
   </style>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tl = gsap.timeline({defaults: {ease: "power3.out"}});
+
+    tl.from(".hero-icon", {
+      duration: 1.5,
+      y: -100,
+      opacity: 0,
+      scale: 0.5,
+      ease: "bounce.out"
+    })
+    .from(".hero-section h1", {
+      duration: 1,
+      y: 30,
+      opacity: 0
+    }, "-=0.8")
+    .from(".hero-section .lead", {
+      duration: 1,
+      y: 20,
+      opacity: 0
+    }, "-=0.6")
+    .from(".hero-section .btn", {
+      duration: 0.8,
+      scale: 0.8,
+      opacity: 0,
+      stagger: 0.2
+    }, "-=0.4")
+    .from(".feature-card", {
+      duration: 1,
+      y: 50,
+      opacity: 0,
+      stagger: 0.1,
+      scrollTrigger: {
+        trigger: ".features-section",
+        start: "top 80%"
+      }
+    }, "-=0.2");
+
+    // Floating animation for hero icon
+    gsap.to(".hero-icon", {
+      y: 15,
+      duration: 2,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut"
+    });
+  });
+</script>
 {% endblock %}
 
