@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:camera/camera.dart';
@@ -17,6 +18,17 @@ List<CameraDescription> cameras = [];
 String serverIp = '';
 String braceletCode = '';
 bool remoteLoggingEnabled = false;
+
+// Platform channel for native settings
+const platform = MethodChannel('com.emo_track.app/settings');
+
+Future<void> openWifiSettings() async {
+  try {
+    await platform.invokeMethod('openWifi');
+  } catch (e) {
+    debugPrint("Failed to open wifi settings: $e");
+  }
+}
 
 Future<void> remoteLog(String message) async {
   debugPrint(message);
@@ -473,6 +485,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: openWifiSettings,
+                  icon: const Icon(Icons.wifi),
+                  label: const Text('Open WiFi Settings'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.blueGrey,
+                  ),
                 ),
               ],
             ),

@@ -13,7 +13,7 @@ import secrets
 import random
 import string
 # Version Control
-APP_VERSION = "1.0.6"
+APP_VERSION = "1.0.7"
 MIN_COMPATIBLE_VERSION = "1.0.0"
 
 def generate_unique_code(length=6):
@@ -855,7 +855,7 @@ def api_app_version():
         'version': cached_github_version,
         'local_version': APP_VERSION,
         'min_compatible': MIN_COMPATIBLE_VERSION,
-        'build_number': 1006,
+        'build_number': 1007,
         'release_date': datetime.now().strftime('%Y-%m-%d'),
         'github_repo': GITHUB_REPO
     })
