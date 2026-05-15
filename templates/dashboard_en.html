@@ -723,13 +723,13 @@
           </div>
           <div class="metric-card">
             <div class="label">Heart Rate</div>
-            <div class="value">85 BPM</div>
+            <div class="value"><span id="heart-rate-value">{{ active_child.heart_rate if active_child.heart_rate else '--' }}</span> BPM</div>
             <div class="hint">From watch sensor</div>
           </div>
-          <div class="metric-card attention">
+          <div class="metric-card" id="battery-card">
             <div class="label">Watch Battery</div>
-            <div class="value">85%</div>
-            <div class="hint">Ready for the day</div>
+            <div class="value"><span id="battery-value">{{ active_child.battery_level if active_child.battery_level else '--' }}</span>%</div>
+            <div class="hint" id="battery-hint">Ready for the day</div>
           </div>
         </div>
 
@@ -1066,6 +1066,16 @@
         if (emotionCard) {
           emotionCard.classList.toggle('attention', riskEmotions.includes(emotion.toLowerCase()));
         }
+
+        // Real Heart Rate & Battery updates
+        setText('heart-rate-value', data.heart_rate || '--');
+        setText('battery-value', data.battery_level || '--');
+        
+        const batteryCard = document.getElementById('battery-card');
+        if (batteryCard) {
+          batteryCard.classList.toggle('attention', data.battery_level < 25);
+        }
+        setText('battery-hint', data.battery_level < 25 ? 'Low battery' : 'Ready for the day');
       })
       .catch(() => {
         setText('watch-live-text', 'Watch offline');

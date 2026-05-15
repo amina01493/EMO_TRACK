@@ -65,6 +65,25 @@ db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# --- Database Migration Hook ---
+with app.app_context():
+    try:
+        from sqlalchemy import text
+        with db.engine.connect() as conn:
+            # Check and add heart_rate
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN heart_rate INTEGER DEFAULT 0'))
+                conn.commit()
+            except: pass
+            # Check and add battery_level
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN battery_level INTEGER DEFAULT 100'))
+                conn.commit()
+            except: pass
+    except Exception as e:
+        print(f"Migration hook info: {e}")
+# -------------------------------
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -95,6 +114,8 @@ class Child(db.Model):
     current_lat = db.Column(db.Float)
     current_lng = db.Column(db.Float)
     last_location_update = db.Column(db.DateTime)
+    heart_rate = db.Column(db.Integer, default=0)
+    battery_level = db.Column(db.Integer, default=100)
 
 
 # Global state for live detections
@@ -665,6 +686,13 @@ def api_live_status():
     response = dict(data)
     response['is_live'] = is_live
     response['last_seen_seconds'] = last_seen_seconds
+    
+    if child_id:
+        child = Child.query.get(child_id)
+        if child:
+            response['heart_rate'] = child.heart_rate
+            response['battery_level'] = child.battery_level
+            
     return jsonify(response)
 
 
@@ -885,10 +913,12 @@ def watch_location():
         
     child.current_lat = lat
     child.current_lng = lng
+    child.heart_rate = data.get('heart_rate', child.heart_rate)
+    child.battery_level = data.get('battery_level', child.battery_level)
     child.last_location_update = datetime.now()
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Location updated'})
+    return jsonify({'success': True, 'message': 'Watch data updated'})
 
 
 if __name__ == '__main__':
