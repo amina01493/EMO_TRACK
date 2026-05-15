@@ -76,6 +76,14 @@
     width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.dashboard-mobile-preview .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-direction: column !important;
   }
 
   .preview-toolbar {
@@ -122,7 +130,9 @@
   }
 
   body.dashboard-mobile-preview .location-card {
-    padding: 20px 16px;
+    padding: 20px 15px;
+    margin-bottom: 16px;
+    border-radius: 20px;
   }
 
   .location-header {
@@ -136,6 +146,24 @@
     color: var(--dash-ink);
     letter-spacing: -0.02em;
     margin-bottom: 8px;
+  }
+
+  body.dashboard-mobile-preview .location-header {
+    margin-bottom: 20px;
+  }
+
+  body.dashboard-mobile-preview .location-header h2 {
+    font-size: 1.4rem;
+  }
+
+  body.dashboard-mobile-preview .location-header p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  body.dashboard-mobile-preview .location-header .live-icon i {
+    width: 32px !important;
+    height: 32px !important;
   }
 
   #map {
@@ -165,6 +193,13 @@
     font-size: 1.1rem;
     line-height: 1.2;
   }
+
+  body.dashboard-mobile-preview h5,
+  body.dashboard-mobile-preview h6 {
+    margin-bottom: 16px !important;
+  }
+
+  .map-fallback {
     background: #f8fbff;
     display: flex;
     flex-direction: column;
@@ -186,6 +221,11 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
   }
 
+  body.dashboard-mobile-preview .status-widget {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
   .zone-item {
     background: #fff;
     border-radius: 16px;
@@ -198,6 +238,14 @@
   .zone-item:hover {
     transform: translateX(4px);
     border-color: var(--dash-primary);
+  }
+
+  body.dashboard-mobile-preview .zone-item {
+    padding: 12px;
+  }
+
+  body.dashboard-mobile-preview .zone-item .d-flex {
+    gap: 8px;
   }
 
   .btn-geo {
@@ -340,13 +388,13 @@
           </h6>
           <div class="d-flex align-items-center gap-3 mb-4">
             <div class="status-pulse" style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);"></div>
-            <span class="fw-bold h5 mb-0" style="color: #22c55e;">
+            <div class="fw-bold h5 mb-0" style="color: #22c55e; font-size: 1.1rem;">
               {% if child.current_lat %}
                 Active Online
               {% else %}
-                Last Seen offline
+                Last Seen Offline
               {% endif %}
-            </span>
+            </div>
           </div>
           <div class="list-stack">
             <div class="d-flex align-items-center gap-2 text-muted small mb-2">
@@ -375,10 +423,10 @@
                       <span class="fw-bold d-block mb-1">{{ loc.name }}</span>
                       <span class="text-muted small"><i data-lucide="maximize" class="me-1" style="width: 12px;"></i> {{ loc.radius }}m radius</span>
                     </div>
-                    <form method="post" class="m-0">
+                    <form method="post" class="m-0" data-confirm-animated>
                       <input type="hidden" name="action" value="delete_location">
                       <input type="hidden" name="location_id" value="{{ loc.id }}">
-                      <button type="submit" class="btn-delete" onclick="return confirm('Delete this zone?')">
+                      <button type="submit" class="btn-delete">
                         <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                       </button>
                     </form>
@@ -409,18 +457,18 @@
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Radius (meters)</label>
-            <input type="number" class="form-control" name="radius" placeholder="500" value="500" required>
+            <input type="number" class="form-control" name="radius" placeholder="500" value="500" min="50" max="5000" required>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Latitude</label>
-            <input type="number" step="0.000001" class="form-control" name="latitude" id="latitude_input" placeholder="Click on map" required>
+            <input type="number" step="0.000001" class="form-control" name="latitude" id="latitude_input" placeholder="Click on map" min="-90" max="90" required>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Longitude</label>
-            <input type="number" step="0.000001" class="form-control" name="longitude" id="longitude_input" placeholder="Click on map" required>
+            <input type="number" step="0.000001" class="form-control" name="longitude" id="longitude_input" placeholder="Click on map" min="-180" max="180" required>
           </div>
         </div>
 

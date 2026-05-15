@@ -65,6 +65,22 @@
     overflow-y: auto;
   }
 
+  /* Force stacking in mobile preview regardless of screen size */
+  body.dashboard-mobile-preview .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-direction: column !important;
+  }
+  
+  body.dashboard-mobile-preview .col-lg-6,
+  body.dashboard-mobile-preview .col-md-6 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
   .preview-toolbar {
     display: flex;
     justify-content: center;
@@ -109,7 +125,9 @@
   }
 
   body.dashboard-mobile-preview .medical-card {
-    padding: 20px 16px;
+    padding: 20px 15px;
+    margin-bottom: 16px;
+    border-radius: 20px;
   }
 
   .medical-header {
@@ -125,6 +143,23 @@
     margin-bottom: 8px;
   }
 
+  body.dashboard-mobile-preview .medical-header {
+    margin-bottom: 20px;
+  }
+
+  body.dashboard-mobile-preview .medical-header h2 {
+    font-size: 1.4rem;
+  }
+
+  body.dashboard-mobile-preview .medical-header p {
+    font-size: 0.9rem;
+  }
+
+  body.dashboard-mobile-preview .medical-header .live-icon i {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
   .medical-item {
     background: #fff;
     border-radius: 20px;
@@ -137,6 +172,11 @@
   .medical-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(37, 99, 235, 0.06);
+  }
+
+  body.dashboard-mobile-preview .medical-item {
+    padding: 16px;
+    border-radius: 16px;
   }
 
   .item-badge {
@@ -270,10 +310,10 @@
                       <p class="small text-muted mb-0">{{ disease.description }}</p>
                     {% endif %}
                   </div>
-                  <form method="post" class="ms-2">
+                  <form method="post" class="ms-2" data-confirm-animated>
                     <input type="hidden" name="action" value="delete_disease">
                     <input type="hidden" name="disease_id" value="{{ disease.id }}">
-                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this record?')">Remove</button>
+                    <button type="submit" class="btn-delete">Remove</button>
                   </form>
                 </div>
               </div>
@@ -296,7 +336,7 @@
             </div>
             <div class="mb-3">
               <label class="form-label">Notes</label>
-              <textarea class="form-control" name="description" placeholder="Optional details..." rows="2"></textarea>
+              <textarea class="form-control" name="description" placeholder="Optional details..." rows="2" required></textarea>
             </div>
             <button type="submit" class="btn-add">Add Condition</button>
           </form>
@@ -327,10 +367,10 @@
                       {% if med.schedule_time %}<div class="mb-0"><strong>Next Dose:</strong> {{ med.schedule_time }}</div>{% endif %}
                     </div>
                   </div>
-                  <form method="post" class="ms-2">
+                  <form method="post" class="ms-2" data-confirm-animated>
                     <input type="hidden" name="action" value="delete_medication">
                     <input type="hidden" name="med_id" value="{{ med.id }}">
-                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this medication?')">Remove</button>
+                    <button type="submit" class="btn-delete">Remove</button>
                   </form>
                 </div>
               </div>
@@ -353,17 +393,23 @@
             </div>
             <div class="row">
               <div class="col-6 mb-3">
-                <label class="form-label">Dosage</label>
-                <input type="text" class="form-control" name="dosage" placeholder="500mg">
+                <label class="form-label">Dosage (Quantity)</label>
+                <input type="number" class="form-control" name="dosage" placeholder="e.g. 500" min="1" required>
               </div>
               <div class="col-6 mb-3">
                 <label class="form-label">Frequency</label>
-                <input type="text" class="form-control" name="frequency" placeholder="Daily">
+                <select class="form-select" name="frequency" required>
+                  <option value="Daily">Daily</option>
+                  <option value="Twice Daily">Twice Daily</option>
+                  <option value="Every 8 Hours">Every 8 Hours</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="As Needed">As Needed</option>
+                </select>
               </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Time</label>
-              <input type="time" class="form-control" name="schedule_time">
+              <input type="time" class="form-control" name="schedule_time" required>
             </div>
             <button type="submit" class="btn-add">Schedule Medication</button>
           </form>
