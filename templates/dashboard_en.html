@@ -685,7 +685,10 @@
     <div class="dashboard-topbar">
       <div>
         <div class="eyebrow">Watch-integrated safety dashboard</div>
-        <h1 class="dashboard-title">{{ active_child.name }}'s Guardian Dashboard</h1>
+        <div class="d-flex align-items-center gap-3">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="EMO_TRACK Logo" style="width: 48px; height: 48px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <h1 class="dashboard-title" style="margin: 0;">{{ active_child.name }}'s Guardian Dashboard</h1>
+        </div>
         <p class="dashboard-subtitle">Live camera, emotion detection, watch status, care records, safe zones, and daily recordings are gathered into one guardian view.</p>
       </div>
       <div id="watch-live-pill" class="watch-live-pill offline">
