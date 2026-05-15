@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
 import os
+import requests
 import socket
 import threading
 import time
@@ -825,14 +826,38 @@ def api_logs():
     return jsonify({'success': True})
 
 
+# Update Cache
+GITHUB_REPO = "simplehima/EMO_TRACK"
+last_github_check = None
+cached_github_version = APP_VERSION
+
 @app.route('/api/app-version', methods=['GET'])
 def api_app_version():
-    """Return the latest available version information."""
+    """Return the latest available version information, checking GitHub if needed."""
+    global last_github_check, cached_github_version
+    
+    # Check GitHub every 1 hour
+    now = datetime.now()
+    if last_github_check is None or (now - last_github_check) > timedelta(hours=1):
+        try:
+            response = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                # Remove 'v' prefix if present (e.g. v1.0.6 -> 1.0.6)
+                tag = data.get('tag_name', APP_VERSION).replace('v', '')
+                cached_github_version = tag
+                last_github_check = now
+        except Exception as e:
+            print(f"GitHub version check failed: {e}")
+            # Keep using local APP_VERSION as fallback if first check fails
+    
     return jsonify({
-        'version': APP_VERSION,
+        'version': cached_github_version,
+        'local_version': APP_VERSION,
         'min_compatible': MIN_COMPATIBLE_VERSION,
         'build_number': 5,
-        'release_date': datetime.now().strftime('%Y-%m-%d')
+        'release_date': datetime.now().strftime('%Y-%m-%d'),
+        'github_repo': GITHUB_REPO
     })
 
 

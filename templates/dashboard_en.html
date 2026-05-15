@@ -1009,7 +1009,9 @@
             <div class="device-row"><span>Connection</span><strong id="device-connection">Waiting</strong></div>
             <div class="device-row"><span>Last frame</span><strong id="device-last-frame">--</strong></div>
             <div class="device-row"><span>Bracelet code</span><strong>{{ active_child.bracelet_code }}</strong></div>
+            <div class="device-row"><span>GitHub Sync</span><strong id="github-version-text" class="loading-text">Checking...</strong></div>
             <div class="device-row"><span>Child profile</span><strong>{{ active_child.age or 'Age not set' }}{% if active_child.age %} yrs{% endif %}</strong></div>
+
           </div>
         <section class="panel">
           <div class="panel-header">
@@ -1186,6 +1188,20 @@
         setText('device-last-frame', lastSeen);
         setText('watch-live-text', isLive ? 'Watch live' : 'Waiting for watch');
         setIcon('watch-face-emoji', isLive ? iconName : 'watch', false);
+
+        // Update GitHub Version Text
+        const ghEl = document.getElementById('github-version-text');
+        if (ghEl && data.version) {
+          ghEl.innerText = `v${data.version}`;
+          ghEl.classList.remove('loading-text');
+          if (data.version !== data.local_version) {
+            ghEl.style.color = 'var(--dash-amber)';
+            ghEl.title = 'New version available on GitHub';
+          } else {
+            ghEl.style.color = 'var(--dash-green)';
+            ghEl.title = 'Up to date with GitHub';
+          }
+        }
 
 
         const pill = document.getElementById('watch-live-pill');
