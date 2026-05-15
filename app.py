@@ -52,13 +52,14 @@ try:
     emotion_detector = EmotionDetector()
 except Exception as e:
     print(f"Failed to initialize EmotionDetector: {e}")
-    emotion_detector = None
+
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'devsecret')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['GOOGLE_MAPS_API_KEY'] = os.environ.get('GOOGLE_MAPS_API_KEY', 'YOUR_GOOGLE_MAPS_API_KEY')
+app.config['GOOGLE_MAPS_API_KEY'] = 'AIzaSyDs0vIRVVFGpK_tFZGWpQkyRMjSAKWWdGc'
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -91,6 +92,9 @@ class Child(db.Model):
     medications = db.relationship('Medication', backref='child', lazy=True, cascade='all, delete-orphan')
     locations = db.relationship('Location', backref='child', lazy=True, cascade='all, delete-orphan')
     alerts = db.relationship('Alert', backref='child', lazy=True, cascade='all, delete-orphan')
+    current_lat = db.Column(db.Float)
+    current_lng = db.Column(db.Float)
+    last_location_update = db.Column(db.DateTime)
 
 
 # Global state for live detections
@@ -865,8 +869,30 @@ def share_recording(recording_id):
     return redirect(url_for('daily_recordings', child_id=recording.child_id))
 
 
+@app.route('/api/watch/location', methods=['POST'])
+def watch_location():
+    data = request.get_json()
+    bracelet_code = data.get('bracelet_code')
+    lat = data.get('latitude')
+    lng = data.get('longitude')
+    
+    if not bracelet_code or lat is None or lng is None:
+        return jsonify({'error': 'Missing data'}), 400
+        
+    child = Child.query.filter_by(bracelet_code=bracelet_code).first()
+    if not child:
+        return jsonify({'error': 'Child not found'}), 404
+        
+    child.current_lat = lat
+    child.current_lng = lng
+    child.last_location_update = datetime.now()
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Location updated'})
+
+
 if __name__ == '__main__':
     print("--- Starting Discovery Broadcast Thread ---")
     start_discovery_broadcast()
     print("--- Starting Flask Server ---")
-    app.run(debug=True, host='0.0.0.0', use_reloader=False)
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)

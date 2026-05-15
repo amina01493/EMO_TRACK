@@ -65,6 +65,19 @@
     overflow-y: auto;
   }
 
+  /* Force stacking in mobile preview regardless of screen size */
+  body.dashboard-mobile-preview .row {
+    flex-direction: column !important;
+  }
+  
+  body.dashboard-mobile-preview .col-lg-8,
+  body.dashboard-mobile-preview .col-lg-4,
+  body.dashboard-mobile-preview .col-md-6 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
   .preview-toolbar {
     display: flex;
     justify-content: center;
@@ -139,7 +152,19 @@
     }
   }
 
-  .map-fallback {
+  .status-pulse {
+    width: 12px;
+    height: 12px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    flex-shrink: 0;
+  }
+  
+  .status-widget .h5 {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
     background: #f8fbff;
     display: flex;
     flex-direction: column;
@@ -296,7 +321,7 @@
     {% endwith %}
 
     <div class="row g-4">
-      <div class="col-lg-8">
+      <div class="col-12 col-lg-8">
         <div class="location-card">
           <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
             <i data-lucide="map" style="width: 20px; height: 20px; color: var(--dash-primary);"></i>
@@ -306,7 +331,7 @@
         </div>
       </div>
 
-      <div class="col-lg-4">
+      <div class="col-12 col-lg-4">
         <!-- Status Widget -->
         <div class="status-widget">
           <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
@@ -315,7 +340,13 @@
           </h6>
           <div class="d-flex align-items-center gap-3 mb-4">
             <div class="status-pulse" style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);"></div>
-            <span class="fw-bold h5 mb-0" style="color: #22c55e;">In Safe Zone</span>
+            <span class="fw-bold h5 mb-0" style="color: #22c55e;">
+              {% if child.current_lat %}
+                Active Online
+              {% else %}
+                Last Seen offline
+              {% endif %}
+            </span>
           </div>
           <div class="list-stack">
             <div class="d-flex align-items-center gap-2 text-muted small mb-2">
@@ -324,7 +355,7 @@
             </div>
             <div class="d-flex align-items-center gap-2 text-muted small">
               <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
-              <span>Last Seen: Just now</span>
+              <span>Last Seen: {{ child.last_location_update.strftime('%H:%M:%S') if child.last_location_update else 'Never' }}</span>
             </div>
           </div>
         </div>
@@ -409,7 +440,6 @@
   let selectedMarker = null;
   const childId = {{ child.id }};
   const locations = {{ child.locations | tojson | safe }};
-  const hasGoogleMapsKey = {{ 'true' if config.GOOGLE_MAPS_API_KEY and config.GOOGLE_MAPS_API_KEY != 'YOUR_GOOGLE_MAPS_API_KEY' else 'false' }};
 
   function setCoordinates(lat, lng) {
     document.getElementById('latitude_input').value = lat.toFixed(6);
@@ -469,6 +499,23 @@
       ]
     });
 
+    // Add live watch location marker if available
+    const watchLat = {{ child.current_lat if child.current_lat else 'null' }};
+    const watchLng = {{ child.current_lng if child.current_lng else 'null' }};
+    
+    if (watchLat && watchLng) {
+      const watchPos = { lat: watchLat, lng: watchLng };
+      new google.maps.Marker({
+        map: map,
+        position: watchPos,
+        title: 'Watch Location ({{ child.name }})',
+        icon: {
+          url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        }
+      });
+      map.setCenter(watchPos);
+    }
+
     locations.forEach(loc => {
       const circleCenter = { lat: loc.latitude, lng: loc.longitude };
       new google.maps.Circle({
@@ -521,13 +568,13 @@
     }
   });
 
+  window.gm_authFailure = function() {
+    renderFallbackMap('Google Maps API Error: Your API key is either invalid or the Maps JavaScript API is not enabled in your Google Cloud Console.');
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
-    if (!hasGoogleMapsKey) {
-      renderFallbackMap('Using placeholder Google Maps API key.');
-      return;
-    }
     const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}';
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDs0vIRVVFGpK_tFZGWpQkyRMjSAKWWdGc';
     script.async = true;
     script.defer = true;
     script.onload = initMap;
