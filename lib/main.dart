@@ -60,6 +60,52 @@ class DiscoveryService {
     return null;
   }
 
+  /// Listens for a UDP broadcast from the server.
+  static Future<String?> findServerUDP({Function(String)? onStatus}) async {
+    const port = 5005;
+    const magic = "EMO_TRACK_DISCOVERY";
+    onStatus?.call("Listening for broadcast...");
+    
+    try {
+      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port);
+      socket.broadcastEnabled = true;
+      
+      final completer = Completer<String?>();
+      
+      socket.listen((RawSocketEvent event) {
+        if (event == RawSocketEvent.read) {
+          final datagram = socket.receive();
+          if (datagram == null) return;
+          
+          final message = utf8.decode(datagram.data);
+          debugPrint("DiscoveryService: Received UDP packet: $message");
+          
+          if (message.startsWith(magic)) {
+            final parts = message.split(':');
+            if (parts.length >= 2) {
+              final ip = parts[1];
+              if (!completer.isCompleted) {
+                socket.close();
+                completer.complete(ip);
+              }
+            }
+          }
+        }
+      });
+      
+      return completer.future.timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          socket.close();
+          return null;
+        },
+      );
+    } catch (e) {
+      debugPrint("DiscoveryService: UDP error: $e");
+      return null;
+    }
+  }
+
   /// Scans the local subnet in parallel for the server.
   static Future<String?> findServer({Function(String)? onStatus}) async {
     final localIp = await _getLocalIp();
@@ -94,9 +140,9 @@ class DiscoveryService {
       });
     }
 
-    // Global timeout of 12 seconds
+    // Global timeout of 10 seconds
     return completer.future.timeout(
-      const Duration(seconds: 12),
+      const Duration(seconds: 10),
       onTimeout: () => null,
     );
   }
@@ -168,14 +214,23 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initApp() async {
-    setState(() => _status = "Scanning network for server...");
+    setState(() => _status = "Scanning for server...");
     
-    // Attempt auto-discovery via HTTP subnet scan
-    String? foundIp = await DiscoveryService.findServer(
+    // 1. Try UDP Discovery (Fastest)
+    String? foundIp = await DiscoveryService.findServerUDP(
       onStatus: (msg) {
         if (mounted) setState(() => _status = msg);
       },
     );
+    
+    // 2. If UDP fails, try Subnet Scan
+    if (foundIp == null) {
+      foundIp = await DiscoveryService.findServer(
+        onStatus: (msg) {
+          if (mounted) setState(() => _status = msg);
+        },
+      );
+    }
     
     if (foundIp != null) {
       serverIp = foundIp;
@@ -183,7 +238,14 @@ class _SplashScreenState extends State<SplashScreen> {
       await prefs.setString('serverIp', foundIp);
       setState(() => _status = "Server found: $foundIp ✓");
     } else if (serverIp.isNotEmpty) {
-      setState(() => _status = "Using saved IP: $serverIp");
+      setState(() => _status = "Checking saved IP: $serverIp");
+      // Verify saved IP
+      final probe = await DiscoveryService._probeIp(serverIp);
+      if (probe == null) {
+         setState(() => _status = "Saved IP unreachable. Manual setup needed.");
+      } else {
+         setState(() => _status = "Connected to $serverIp ✓");
+      }
     } else {
       setState(() => _status = "No server found. Set IP in Settings.");
     }
