@@ -98,6 +98,22 @@
     padding: 10px;
     border: 10px solid #111827;
     border-radius: 38px;
+    background: #fff;
+    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+  }
+
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .loading-text {
+    animation: pulse-opacity 2s infinite ease-in-out;
+    font-style: italic;
+    color: var(--dash-muted) !important;
+  }
+
     background: #f8fbff;
     box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
     overflow: hidden;
@@ -760,6 +776,12 @@
               Recordings
             </button>
           </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button">
+              <i data-lucide="history" class="tw-w-4 tw-h-4"></i>
+              History
+            </button>
+          </li>
         </ul>
 
         <div class="tab-content">
@@ -897,6 +919,75 @@
               </div>
             </section>
           </div>
+          <div class="tab-pane fade" id="history">
+            <section class="card">
+              <div class="card-header">
+                <span>Location & Telemetry History</span>
+                <span class="text-muted small">Last 50 events</span>
+              </div>
+              <div class="card-body">
+                {% if history %}
+                  <!-- Filter Bar -->
+                  <div class="d-flex flex-wrap gap-2 mb-3 p-2 bg-light rounded" style="border: 1px solid var(--dash-line);">
+                    <div class="flex-grow-1 min-w-[200px]">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0"><i data-lucide="search" style="width: 14px;"></i></span>
+                        <input type="text" id="historySearch" class="form-control border-start-0" placeholder="Search history..." onkeyup="filterHistory()">
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <select id="historyFilterType" class="form-select form-select-sm" style="width: 140px;" onchange="filterHistory()">
+                        <option value="all">All Events</option>
+                        <option value="low-battery">Low Battery (< 25%)</option>
+                        <option value="high-hr">High HR (> 100)</option>
+                      </select>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="resetHistoryFilters()">Reset</button>
+                    </div>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="historyTable">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Mood</th>
+                          <th>Location</th>
+                          <th>Heart Rate</th>
+                          <th>Battery</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for entry in history %}
+                            <tr class="history-row" 
+                                data-hr="{{ entry.heart_rate or 0 }}" 
+                                data-battery="{{ entry.battery_level or 0 }}"
+                                data-search="{{ entry.timestamp.strftime('%H:%M:%S') if entry.timestamp else '' }} {{ entry.emotion }} {{ entry.latitude }}, {{ entry.longitude }}">
+                              <td class="text-nowrap fw-bold">{{ entry.timestamp.strftime('%H:%M:%S') if entry.timestamp else '--' }}</td>
+                              <td>
+                                {% if entry.emotion %}
+                                  <span class="badge bg-primary-subtle text-primary">
+                                    {{ entry.emotion.capitalize() }} ({{ entry.confidence|round(1) }}%)
+                                  </span>
+                                {% else %}
+                                  <span class="text-muted small">Telemetry</span>
+                                {% endif %}
+                              </td>
+                              <td class="small">{{ entry.latitude|round(6) if entry.latitude else '--' }}, {{ entry.longitude|round(6) if entry.longitude else '--' }}</td>
+                              <td><span class="badge bg-danger-subtle text-danger"><i data-lucide="heart" class="me-1" style="width: 12px;"></i> {{ entry.heart_rate or '--' }}</span></td>
+                              <td><span class="badge bg-success-subtle text-success"><i data-lucide="battery" class="me-1" style="width: 12px;"></i> {{ entry.battery_level or '--' }}%</span></td>
+                            </tr>
+                        {% endfor %}
+
+                      </tbody>
+                    </table>
+                  </div>
+
+                {% else %}
+                  <p class="empty-copy mb-0 text-center py-4">No history records yet. Telemetry data will appear here once the watch syncs.</p>
+                {% endif %}
+              </div>
+            </section>
+          </div>
         </div>
       </main>
 
@@ -919,6 +1010,29 @@
             <div class="device-row"><span>Last frame</span><strong id="device-last-frame">--</strong></div>
             <div class="device-row"><span>Bracelet code</span><strong>{{ active_child.bracelet_code }}</strong></div>
             <div class="device-row"><span>Child profile</span><strong>{{ active_child.age or 'Age not set' }}{% if active_child.age %} yrs{% endif %}</strong></div>
+          </div>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Remote Control</span>
+          </div>
+          <div class="panel-body">
+            <div class="d-flex flex-column gap-3">
+              <div class="d-flex align-items-center justify-content-between p-3" style="background: var(--dash-card); border-radius: 12px; border: 1px solid var(--dash-line);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="panel-icon" style="background: rgba(37, 99, 235, 0.1); color: var(--dash-primary); width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;">
+                    <i data-lucide="lock" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div>
+                    <strong class="d-block">Screen Lock</strong>
+                    <small class="text-muted">Dim screen & disable touch</small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="lockWatchSwitch" {% if active_child.is_locked %}checked{% endif %} onchange="toggleWatchLock()">
+                </div>
+              </div>
+              <p class="small text-muted mb-0"><i data-lucide="info" class="me-1" style="width: 14px;"></i> When locked, the watch will dim and controls will be disabled to prevent the child from closing the app.</p>
+            </div>
           </div>
         </section>
 
@@ -1049,6 +1163,20 @@
         setIcon('emotion-emoji', iconName, isPulse);
         setText('emotion-text', formattedEmotion);
         setText('emotion-time', `Last seen: ${data.timestamp || '--:--'} (${lastSeen})`);
+        
+        // Handle loading-text class for various elements
+        const overlayTextEl = document.getElementById('overlay-text');
+        const overlayConfEl = document.getElementById('overlay-confidence');
+        const summaryEl = document.getElementById('summary-emotion');
+        const deviceConnEl = document.getElementById('device-connection');
+        const liveTextEl = document.getElementById('watch-live-text');
+
+        if (overlayTextEl) overlayTextEl.classList.toggle('loading-text', emotion === 'waiting');
+        if (overlayConfEl) overlayConfEl.classList.toggle('loading-text', !confidence);
+        if (summaryEl) summaryEl.classList.toggle('loading-text', !confidence);
+        if (deviceConnEl) deviceConnEl.classList.toggle('loading-text', !isLive);
+        if (liveTextEl) liveTextEl.classList.toggle('loading-text', !isLive);
+
         setIcon('overlay-emoji', iconName, isPulse);
         setText('overlay-text', formattedEmotion);
         setText('overlay-confidence', confidence ? `Confidence ${confidence.toFixed(1)}%` : 'Confidence pending');
@@ -1059,6 +1187,7 @@
         setText('watch-live-text', isLive ? 'Watch live' : 'Waiting for watch');
         setIcon('watch-face-emoji', isLive ? iconName : 'watch', false);
 
+
         const pill = document.getElementById('watch-live-pill');
         if (pill) pill.classList.toggle('offline', !isLive);
 
@@ -1068,14 +1197,19 @@
         }
 
         // Real Heart Rate & Battery updates
-        setText('heart-rate-value', data.heart_rate || '--');
-        setText('battery-value', data.battery_level || '--');
+        console.log("Watch Status Update:", data);
+        const hr = (data.heart_rate !== undefined && data.heart_rate !== null) ? data.heart_rate : '--';
+        const bat = (data.battery_level !== undefined && data.battery_level !== null) ? data.battery_level : '--';
+        
+        setText('heart-rate-value', hr);
+        setText('battery-value', bat);
         
         const batteryCard = document.getElementById('battery-card');
-        if (batteryCard) {
-          batteryCard.classList.toggle('attention', data.battery_level < 25);
+        if (batteryCard && bat !== '--') {
+          const batInt = parseInt(bat);
+          batteryCard.classList.toggle('attention', batInt < 25);
+          setText('battery-hint', batInt < 25 ? 'Low battery' : 'Ready for the day');
         }
-        setText('battery-hint', data.battery_level < 25 ? 'Low battery' : 'Ready for the day');
       })
       .catch(() => {
         setText('watch-live-text', 'Watch offline');
@@ -1083,6 +1217,60 @@
         const pill = document.getElementById('watch-live-pill');
         if (pill) pill.classList.add('offline');
       });
+  }
+
+  function toggleWatchLock() {
+    const isLocked = document.getElementById('lockWatchSwitch').checked;
+    const childId = {{ active_child.id }};
+    
+    fetch(`/api/toggle-lock/${childId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("Watch lock status updated:", data.is_locked);
+      } else {
+        document.getElementById('lockWatchSwitch').checked = !isLocked;
+        alert("Failed to update lock status: " + (data.error || "Unknown error"));
+      }
+    })
+    .catch(error => {
+      document.getElementById('lockWatchSwitch').checked = !isLocked;
+      console.error("Error toggling lock:", error);
+    });
+  }
+
+  function filterHistory() {
+    const query = document.getElementById('historySearch').value.toLowerCase();
+    const type = document.getElementById('historyFilterType').value;
+    const rows = document.querySelectorAll('.history-row');
+
+    rows.forEach(row => {
+      const searchText = row.getAttribute('data-search').toLowerCase();
+      const hr = parseInt(row.getAttribute('data-hr'));
+      const battery = parseInt(row.getAttribute('data-battery'));
+      
+      let matchesSearch = searchText.includes(query);
+      let matchesType = true;
+
+      if (type === 'low-battery') {
+        matchesType = battery < 25;
+      } else if (type === 'high-hr') {
+        matchesType = hr > 100;
+      }
+
+      row.style.display = (matchesSearch && matchesType) ? '' : 'none';
+    });
+  }
+
+  function resetHistoryFilters() {
+    document.getElementById('historySearch').value = '';
+    document.getElementById('historyFilterType').value = 'all';
+    filterHistory();
   }
 
   document.addEventListener('DOMContentLoaded', () => {

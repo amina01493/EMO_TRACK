@@ -338,6 +338,24 @@
     color: var(--dash-primary);
     font-weight: 700;
   }
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .pulse-anim {
+    animation: pulse-opacity 1.5s infinite ease-in-out;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .spin {
+    animation: rotate 2s linear infinite;
+    display: inline-block;
+  }
 </style>
 
 <div class="dashboard-preview-frame" data-child-id="{{ child.id }}">
@@ -401,11 +419,15 @@
               <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
               <span>Battery: 85%</span>
             </div>
-            <div class="d-flex align-items-center gap-2 text-muted small">
+            <div class="d-flex align-items-center gap-2 text-muted small mb-3">
               <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
               <span>Last Seen: {{ child.last_location_update.strftime('%H:%M:%S') if child.last_location_update else 'Never' }}</span>
             </div>
           </div>
+          <button id="locate_watch_btn" class="btn btn-primary w-100 mt-2 d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; font-weight: 700; background: var(--dash-primary);">
+            <i data-lucide="crosshair" style="width: 18px; height: 18px;"></i>
+            Locate Watch
+          </button>
         </div>
 
         <!-- Zones List -->
@@ -487,7 +509,7 @@
   let map;
   let selectedMarker = null;
   const childId = {{ child.id }};
-  const locations = {{ child.locations | tojson | safe }};
+  const locations = {{ locations_json | tojson | safe }};
 
   function setCoordinates(lat, lng) {
     document.getElementById('latitude_input').value = lat.toFixed(6);
@@ -595,6 +617,82 @@
     });
   }
 
+  let watchMarker = null;
+
+  function updateWatchMarker() {
+    fetch(`/api/live-status?child_id=${childId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.current_lat && data.current_lng) {
+          const watchPos = { lat: data.current_lat, lng: data.current_lng };
+          
+          if (!watchMarker) {
+            watchMarker = new google.maps.Marker({
+              map: map,
+              position: watchPos,
+              title: `Watch Location (${data.name || 'Child'})`,
+              icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+              }
+            });
+          } else {
+            watchMarker.setPosition(watchPos);
+          }
+          
+          // Update status text
+          const statusText = document.querySelector('.status-widget .h5');
+          if (statusText) {
+            statusText.textContent = data.is_live ? 'Active Online' : 'Last Seen Offline';
+            statusText.style.color = data.is_live ? '#22c55e' : '#667085';
+          }
+          const batteryText = document.querySelector('.status-widget .list-stack div:first-child span');
+          if (batteryText) batteryText.textContent = `Battery: ${data.battery_level}%`;
+        }
+      });
+  }
+
+  document.getElementById('locate_watch_btn').addEventListener('click', () => {
+    const btn = document.getElementById('locate_watch_btn');
+    const originalText = btn.innerHTML;
+
+    if (watchMarker) {
+      map.setCenter(watchMarker.getPosition());
+      map.setZoom(17);
+      
+      // Visual feedback
+      btn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i> Located!';
+      btn.classList.replace('btn-primary', 'btn-success');
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.replace('btn-success', 'btn-primary');
+        lucide.createIcons();
+      }, 2000);
+    } else {
+      // Animated status feedback
+      btn.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px; height: 18px;"></i> Waiting for sync...';
+      btn.classList.add('pulse-anim');
+      
+      // Create or update a status message below the button
+      let statusMsg = document.getElementById('watch-locate-status');
+      if (!statusMsg) {
+        statusMsg = document.createElement('div');
+        statusMsg.id = 'watch-locate-status';
+        statusMsg.style.cssText = 'margin-top: 8px; font-size: 0.85rem; color: #dc2626; font-style: italic; font-weight: 600; text-align: center;';
+        btn.parentNode.appendChild(statusMsg);
+      }
+      statusMsg.innerHTML = '<span class="pulse-anim">Watch location not available yet. Please wait for the first sync.</span>';
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('pulse-anim');
+        if (statusMsg) statusMsg.innerHTML = '';
+        lucide.createIcons();
+      }, 4000);
+    }
+  });
+
   document.getElementById('geo_btn').addEventListener('click', () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
@@ -625,7 +723,10 @@
     script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDs0vIRVVFGpK_tFZGWpQkyRMjSAKWWdGc';
     script.async = true;
     script.defer = true;
-    script.onload = initMap;
+    script.onload = () => {
+      initMap();
+      setInterval(updateWatchMarker, 5000);
+    };
     script.onerror = () => renderFallbackMap('Check internet connection or API key status.');
     document.head.appendChild(script);
   });

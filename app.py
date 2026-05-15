@@ -9,6 +9,16 @@ import threading
 import time
 from datetime import datetime, timedelta
 import secrets
+import random
+import string
+# Version Control
+APP_VERSION = "1.0.6"
+MIN_COMPATIBLE_VERSION = "1.0.0"
+
+def generate_unique_code(length=6):
+    """Generate a unique random alphanumeric code."""
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choice(chars) for _ in range(length))
 from detection_utils import EmotionDetector
 import numpy as np
 import cv2
@@ -80,6 +90,36 @@ with app.app_context():
                 conn.execute(text('ALTER TABLE child ADD COLUMN battery_level INTEGER DEFAULT 100'))
                 conn.commit()
             except: pass
+            # Check and add location columns
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN current_lat FLOAT'))
+                conn.commit()
+            except: pass
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN current_lng FLOAT'))
+                conn.commit()
+            except: pass
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN last_location_update DATETIME'))
+                conn.commit()
+            except: pass
+            # Check and add is_locked
+            try:
+                conn.execute(text('ALTER TABLE child ADD COLUMN is_locked BOOLEAN DEFAULT 0'))
+                conn.commit()
+            except: pass
+            # Check and add emotion columns to location_history
+            try:
+                conn.execute(text('ALTER TABLE location_history ADD COLUMN emotion VARCHAR(50)'))
+                conn.commit()
+            except: pass
+            try:
+                conn.execute(text('ALTER TABLE location_history ADD COLUMN confidence FLOAT'))
+                conn.commit()
+            except: pass
+            
+        # Create all tables
+        db.create_all()
     except Exception as e:
         print(f"Migration hook info: {e}")
 # -------------------------------
@@ -116,6 +156,8 @@ class Child(db.Model):
     last_location_update = db.Column(db.DateTime)
     heart_rate = db.Column(db.Integer, default=0)
     battery_level = db.Column(db.Integer, default=100)
+    is_locked = db.Column(db.Boolean, default=False)
+    history = db.relationship('LocationHistory', backref='child', lazy=True, cascade='all, delete-orphan')
 
 
 # Global state for live detections
@@ -126,7 +168,7 @@ class Disease(db.Model):
     child_id = db.Column(db.Integer, db.ForeignKey('child.id'), nullable=False)
     name = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
 
 class Medication(db.Model):
@@ -149,7 +191,19 @@ class Location(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
     radius = db.Column(db.Float)  # safe zone radius
-    created_at = db.Column(db.DateTime, default=lambda: db.func.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+class LocationHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    child_id = db.Column(db.Integer, db.ForeignKey('child.id'), nullable=False)
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    heart_rate = db.Column(db.Integer)
+    battery_level = db.Column(db.Integer)
+    emotion = db.Column(db.String(50))
+    confidence = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.now)
 
 
 class Alert(db.Model):
@@ -390,6 +444,7 @@ def dashboard():
         recent_recordings = DailyRecording.query.filter_by(child_id=active_child.id).order_by(DailyRecording.uploaded_at.desc()).limit(3).all()
         medical_reports = MedicalReport.query.filter_by(child_id=active_child.id).order_by(MedicalReport.uploaded_at.desc()).limit(3).all()
         recent_alerts = Alert.query.filter_by(child_id=active_child.id).order_by(Alert.timestamp.desc()).limit(5).all()
+        history = LocationHistory.query.filter_by(child_id=active_child.id).order_by(LocationHistory.timestamp.desc()).limit(50).all()
 
     return render_template(
         'dashboard_en.html',
@@ -398,6 +453,7 @@ def dashboard():
         recent_recordings=recent_recordings,
         medical_reports=medical_reports,
         recent_alerts=recent_alerts,
+        history=history if active_child else []
     )
 
 
@@ -407,11 +463,18 @@ def add_child():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         gender = request.form.get('gender', 'boy')
-        bracelet_code = request.form.get('bracelet_code', '').strip()
         age = request.form.get('age', type=int)
         
-        if not all([name, bracelet_code]):
-            flash('Please fill required fields', 'warning')
+        # Auto-generate a unique code if not provided
+        bracelet_code = request.form.get('bracelet_code', '').strip()
+        if not bracelet_code:
+            while True:
+                bracelet_code = f"CG-{generate_unique_code(4)}"
+                if not Child.query.filter_by(bracelet_code=bracelet_code).first():
+                    break
+        
+        if not name:
+            flash('Please enter child name', 'warning')
             return redirect(url_for('add_child'))
         
         if Child.query.filter_by(bracelet_code=bracelet_code).first():
@@ -421,7 +484,7 @@ def add_child():
         child = Child(parent_id=current_user.id, name=name, gender=gender, bracelet_code=bracelet_code, age=age)
         db.session.add(child)
         db.session.commit()
-        flash('Child added successfully', 'success')
+        flash(f'Child added successfully! Bracelet Code: {bracelet_code}', 'success')
         return redirect(url_for('dashboard', child_id=child.id))
     
     return render_template('add_child_en.html')
@@ -510,7 +573,14 @@ def child_locations(child_id):
         radius = request.form.get('radius', default=200, type=float)
         
         if location_name and latitude is not None and longitude is not None:
-            location = Location(child_id=child.id, name=location_name, latitude=latitude, longitude=longitude, radius=radius)
+            location = Location(
+                child_id=child.id, 
+                name=location_name, 
+                latitude=latitude, 
+                longitude=longitude, 
+                radius=radius,
+                created_at=datetime.now()
+            )
             db.session.add(location)
             db.session.commit()
             flash('Safe zone added', 'success')
@@ -519,7 +589,21 @@ def child_locations(child_id):
         flash('Please fill all required fields', 'warning')
     
     google_maps_api_key = app.config['GOOGLE_MAPS_API_KEY']
-    return render_template('child_locations_en.html', child=child, google_maps_api_key=google_maps_api_key)
+    
+    # Convert locations to serializable format for JS
+    locations_data = []
+    for loc in child.locations:
+        locations_data.append({
+            'name': loc.name,
+            'latitude': loc.latitude,
+            'longitude': loc.longitude,
+            'radius': loc.radius
+        })
+        
+    return render_template('child_locations_en.html', 
+                         child=child, 
+                         locations_json=locations_data,
+                         google_maps_api_key=google_maps_api_key)
 
 
 @app.route('/author/<int:user_id>')
@@ -630,8 +714,34 @@ def api_detect_emotion():
                 child = Child.query.filter_by(bracelet_code=bracelet_code).first()
                 if child:
                     latest_detections[str(child.id)] = detection_payload
+                    # Log to history
+                    history_entry = LocationHistory(
+                        child_id=child.id,
+                        latitude=child.current_lat,
+                        longitude=child.current_lng,
+                        heart_rate=child.heart_rate,
+                        battery_level=child.battery_level,
+                        emotion=emotion_data['emotion'],
+                        confidence=float(emotion_data['confidence'])
+                    )
+                    db.session.add(history_entry)
+                    db.session.commit()
             elif child_id:
                 latest_detections[str(child_id)] = detection_payload
+                child = Child.query.get(child_id)
+                if child:
+                    # Log to history
+                    history_entry = LocationHistory(
+                        child_id=child.id,
+                        latitude=child.current_lat,
+                        longitude=child.current_lng,
+                        heart_rate=child.heart_rate,
+                        battery_level=child.battery_level,
+                        emotion=emotion_data['emotion'],
+                        confidence=float(emotion_data['confidence'])
+                    )
+                    db.session.add(history_entry)
+                    db.session.commit()
             
             # POP-UP: Show detection on server desktop
             try:
@@ -656,42 +766,50 @@ def api_detect_emotion():
 
 @app.route('/api/live-status', methods=['GET'])
 def api_live_status():
-    """Get the latest detected emotion for the web dashboard."""
-    child_id = request.args.get('child_id')
+    """Get the latest detected emotion and watch metrics for the web dashboard."""
+    child_id_raw = request.args.get('child_id')
+    child_id = int(child_id_raw) if child_id_raw and child_id_raw.isdigit() else None
+    
     data = latest_detections.get(str(child_id)) if child_id else None
     data = data or latest_detections.get('global')
 
-    if not data:
-        return jsonify({
-            'emotion': 'Unknown',
-            'confidence': 0,
-            'timestamp': '--:--:--',
-            'received_at': None,
-            'is_live': False,
-            'last_seen_seconds': None,
-            'source': 'watch-app'
-        })
+    response = {
+        'emotion': 'Unknown',
+        'confidence': 0,
+        'timestamp': '--:--:--',
+        'received_at': None,
+        'is_live': False,
+        'last_seen_seconds': None,
+        'source': 'watch-app',
+        'heart_rate': '--',
+        'battery_level': '--'
+    }
 
-    last_seen_seconds = None
-    is_live = False
-    received_at = data.get('received_at')
-    if received_at:
-        try:
-            last_seen = datetime.fromisoformat(received_at)
-            last_seen_seconds = int((datetime.now() - last_seen).total_seconds())
-            is_live = last_seen_seconds <= 15
-        except ValueError:
-            pass
+    if data:
+        last_seen_seconds = None
+        is_live = False
+        received_at = data.get('received_at')
+        if received_at:
+            try:
+                last_seen = datetime.fromisoformat(received_at)
+                last_seen_seconds = int((datetime.now() - last_seen).total_seconds())
+                is_live = last_seen_seconds <= 15
+            except ValueError:
+                pass
 
-    response = dict(data)
-    response['is_live'] = is_live
-    response['last_seen_seconds'] = last_seen_seconds
-    
+        response.update(data)
+        response['is_live'] = is_live
+        response['last_seen_seconds'] = last_seen_seconds
+
     if child_id:
         child = Child.query.get(child_id)
         if child:
-            response['heart_rate'] = child.heart_rate
-            response['battery_level'] = child.battery_level
+            # Always return numbers if they exist, otherwise '--'
+            response['heart_rate'] = child.heart_rate if child.heart_rate is not None else '--'
+            response['battery_level'] = child.battery_level if child.battery_level is not None else '--'
+            response['current_lat'] = child.current_lat
+            response['current_lng'] = child.current_lng
+            response['name'] = child.name
             
     return jsonify(response)
 
@@ -710,7 +828,12 @@ def api_logs():
 @app.route('/api/app-version', methods=['GET'])
 def api_app_version():
     """Return the latest available version information."""
-    return jsonify({'version': '1.0.0', 'build_number': 1})
+    return jsonify({
+        'version': APP_VERSION,
+        'min_compatible': MIN_COMPATIBLE_VERSION,
+        'build_number': 5,
+        'release_date': datetime.now().strftime('%Y-%m-%d')
+    })
 
 
 @app.route('/api/latest-apk', methods=['GET'])
@@ -897,18 +1020,34 @@ def share_recording(recording_id):
     return redirect(url_for('daily_recordings', child_id=recording.child_id))
 
 
+@app.route('/api/toggle-lock/<int:child_id>', methods=['POST'])
+@login_required
+def toggle_lock(child_id):
+    child = Child.query.get_or_404(child_id)
+    if child.parent_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    child.is_locked = not child.is_locked
+    db.session.commit()
+    return jsonify({'success': True, 'is_locked': child.is_locked})
+
+
 @app.route('/api/watch/location', methods=['POST'])
 def watch_location():
+    """Receive location and status from the watch."""
     data = request.get_json()
     bracelet_code = data.get('bracelet_code')
     lat = data.get('latitude')
     lng = data.get('longitude')
     
-    if not bracelet_code or lat is None or lng is None:
-        return jsonify({'error': 'Missing data'}), 400
+    print(f"Received telemetry from watch: {bracelet_code} (Lat: {lat}, Lng: {lng}, HR: {data.get('heart_rate')}, Bat: {data.get('battery_level')})")
+    
+    if not bracelet_code:
+        return jsonify({'error': 'Missing bracelet_code'}), 400
         
     child = Child.query.filter_by(bracelet_code=bracelet_code).first()
     if not child:
+        print(f"Error: No child found with bracelet code {bracelet_code}")
         return jsonify({'error': 'Child not found'}), 404
         
     child.current_lat = lat
@@ -916,9 +1055,24 @@ def watch_location():
     child.heart_rate = data.get('heart_rate', child.heart_rate)
     child.battery_level = data.get('battery_level', child.battery_level)
     child.last_location_update = datetime.now()
+    
+    # Log to history
+    history_entry = LocationHistory(
+        child_id=child.id,
+        latitude=lat,
+        longitude=lng,
+        heart_rate=child.heart_rate,
+        battery_level=child.battery_level
+    )
+    db.session.add(history_entry)
+    
     db.session.commit()
     
-    return jsonify({'success': True, 'message': 'Watch data updated'})
+    return jsonify({
+        'success': True, 
+        'message': 'Watch data updated',
+        'is_locked': child.is_locked
+    })
 
 
 if __name__ == '__main__':

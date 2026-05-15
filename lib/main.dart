@@ -7,9 +7,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import 'package:battery_plus/battery_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:math' as math;
 
 List<CameraDescription> cameras = [];
 String serverIp = '';
+String braceletCode = '';
 bool remoteLoggingEnabled = false;
 
 Future<void> remoteLog(String message) async {
@@ -106,7 +112,23 @@ void main() async {
   
   final prefs = await SharedPreferences.getInstance();
   serverIp = prefs.getString('serverIp') ?? '';
+  braceletCode = prefs.getString('braceletCode') ?? '';
   remoteLoggingEnabled = prefs.getBool('remoteLoggingEnabled') ?? false;
+
+  if (braceletCode.isEmpty) {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        braceletCode = androidInfo.id; // Unique hardware ID
+        await prefs.setString('braceletCode', braceletCode);
+      }
+    } catch (e) {
+      final random = math.Random();
+      final id = List.generate(4, (_) => random.nextInt(10)).join();
+      braceletCode = 'WATCH-$id'; // Fallback
+    }
+  }
 
   runApp(const ChildSafetyApp());
 }
@@ -580,6 +602,7 @@ class ChildModeScreen extends StatefulWidget {
 
 class _ChildModeScreenState extends State<ChildModeScreen> {
   bool _isMonitoring = false;
+  bool _isRemoteLocked = false;
   String _status = "Disconnected";
   Timer? _monitoringTimer;
   CameraController? _cameraController;
@@ -633,10 +656,53 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
   }
 
   void _startMonitoring() {
+    // Check location permission once
+    Geolocator.requestPermission();
+
     // Capture every 5 seconds for live dashboard
     _monitoringTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _captureAndSend();
+      _sendWatchStatus();
     });
+  }
+
+  Future<void> _sendWatchStatus() async {
+    if (serverIp.isEmpty) return;
+    try {
+      final battery = Battery();
+      final level = await battery.batteryLevel;
+      
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 2),
+        );
+      } catch (_) {}
+
+      final response = await http.post(
+        Uri.parse('http://$serverIp:5000/api/watch/location'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'bracelet_code': braceletCode,
+          'latitude': pos?.latitude,
+          'longitude': pos?.longitude,
+          'battery_level': level,
+          'heart_rate': 72 + (DateTime.now().second % 10), // Simulated variation for now
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['is_locked'] != null) {
+          setState(() {
+            _isRemoteLocked = data['is_locked'];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Watch Status Error: $e");
+    }
   }
 
   void _stopMonitoring() {
@@ -650,6 +716,7 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
       final image = await _cameraController!.takePicture();
       var request = http.MultipartRequest('POST', Uri.parse('http://$serverIp:5000/api/detect-emotion'));
       request.fields['source'] = 'watch-app';
+      request.fields['bracelet_code'] = braceletCode;
       request.files.add(await http.MultipartFile.fromPath('image', image.path));
       
       var response = await request.send();
@@ -665,127 +732,163 @@ class _ChildModeScreenState extends State<ChildModeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
                 children: [
-                  const Text(
-                    "WATCH MODE",
-                    style: TextStyle(
-                      fontSize: 10,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "WATCH MODE",
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.settings, size: 18),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  // Camera Preview (Small Circle)
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _isMonitoring ? const Color(0xFF4A90E2) : Colors.grey,
+                        width: 3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: _cameraController != null && _cameraController!.value.isInitialized
+                          ? AspectRatio(
+                              aspectRatio: 1,
+                              child: CameraPreview(_cameraController!),
+                            )
+                          : Center(
+                              child: Text(
+                                _isMonitoring ? "📡" : "💤",
+                                style: const TextStyle(fontSize: 30),
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Text(
+                    _isMonitoring ? "Monitoring Active" : "Monitoring Paused",
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Color(0xFF2D3436),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.settings, size: 18),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                      );
-                    },
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: _status == "Connected" ? Colors.green : Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _status,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const Spacer(),
-              // Camera Preview (Small Circle)
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _isMonitoring ? const Color(0xFF4A90E2) : Colors.grey,
-                    width: 3,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: _cameraController != null && _cameraController!.value.isInitialized
-                      ? AspectRatio(
-                          aspectRatio: 1,
-                          child: CameraPreview(_cameraController!),
-                        )
-                      : Center(
+                    child: Row(
+                      children: [
+                        const Icon(Icons.security, color: Color(0xFF4A90E2), size: 16),
+                        const SizedBox(width: 8),
+                        const Expanded(
                           child: Text(
-                            _isMonitoring ? "📡" : "💤",
-                            style: const TextStyle(fontSize: 30),
+                            "Sending live face and mood data.",
+                            style: TextStyle(fontSize: 9, color: Colors.grey),
                           ),
                         ),
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                _isMonitoring ? "Monitoring Active" : "Monitoring Paused",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3436),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: _status == "Connected" ? Colors.green : Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _status,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey[600],
+                        if (!_isRemoteLocked)
+                          Transform.scale(
+                            scale: 0.8,
+                            child: Switch(
+                              value: _isMonitoring,
+                              onChanged: _toggleMonitoring,
+                              activeColor: const Color(0xFF4A90E2),
+                            ),
+                          ),
+                        if (_isRemoteLocked)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 8.0),
+                            child: Icon(Icons.lock, size: 16, color: Colors.grey),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.security, color: Color(0xFF4A90E2), size: 16),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        "Sending live face and mood data.",
-                        style: TextStyle(fontSize: 9, color: Colors.grey),
-                      ),
+            ),
+          ),
+          if (_isRemoteLocked)
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: false, // Catch all touches
+                child: Container(
+                  color: Colors.black.withOpacity(0.85), // Very dark
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock, color: Colors.white54, size: 40),
+                        SizedBox(height: 16),
+                        Text(
+                          "Device Locked",
+                          style: TextStyle(color: Colors.white54, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "By Guardian",
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
+                      ],
                     ),
-                    Transform.scale(
-                      scale: 0.8,
-                      child: Switch(
-                        value: _isMonitoring,
-                        onChanged: _toggleMonitoring,
-                        activeColor: const Color(0xFF4A90E2),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -1690,11 +1793,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final response = await http.get(Uri.parse('http://$serverIp:5000/api/app-version'));
       if (response.statusCode == 200) {
-        // Simple version check logic
-        final data = jsonDecode(response.statusCode == 200 ? response.body : '{}');
-        // For this demo, we always prompt to "update" if the user clicks it
-        if (mounted) {
-          _showUpdateDialog();
+        final data = jsonDecode(response.body);
+        final serverVersion = data['version'] ?? '1.0.0';
+        
+        final packageInfo = await PackageInfo.fromPlatform();
+        final currentVersion = packageInfo.version;
+        
+        // Check if server version is newer (simple string comparison for now)
+        if (serverVersion != currentVersion && mounted) {
+          _showUpdateDialog(serverVersion);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('App is up to date')),
+          );
         }
       }
     } catch (e) {
@@ -1704,12 +1815,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _showUpdateDialog() {
+  void _showUpdateDialog(String version) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Update Available'),
-        content: const Text('A newer version of the app is available on the server. Download and install?'),
+        title: Text('New Version Available ($version)'),
+        content: const Text('A newer version of Child Guard is available on the server. Download and install now?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Later')),
           ElevatedButton(
@@ -1904,6 +2015,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Watch Identity',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FutureBuilder<String>(
+                      future: () async {
+                        final deviceInfo = DeviceInfoPlugin();
+                        if (Platform.isAndroid) {
+                          final androidInfo = await deviceInfo.androidInfo;
+                          return androidInfo.id;
+                        }
+                        return 'Unknown';
+                      }(),
+                      builder: (context, snapshot) {
+                        return Text(
+                          'Hardware ID: ${snapshot.data ?? "..."}',
+                          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                        );
+                      }
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Bracelet Code (Custom)',
+                        border: OutlineInputBorder(),
+                        hintText: 'e.g. BR-001',
+                        helperText: 'Override with dashboard code if needed',
+                      ),
+                      controller: TextEditingController(text: braceletCode),
+                      onChanged: (value) async {
+                        braceletCode = value;
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('braceletCode', value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     const Divider(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1944,14 +2095,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Center(
+                            child: Text(
+                              'Version: ${snapshot.data!.version}+${snapshot.data!.buildNumber}',
+                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: _isUpdating ? null : _checkForUpdates,
                         icon: _isUpdating 
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
                           : const Icon(Icons.system_update),
-                        label: Text(_isUpdating ? 'Downloading...' : 'Check for Updates'),
+                        label: Text(_isUpdating ? 'Checking...' : 'Check for Updates'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1ABC9C),
                           foregroundColor: Colors.white,
