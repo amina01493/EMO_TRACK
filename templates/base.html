@@ -8,10 +8,22 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Child Guard">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%235faee9' width='180' height='180'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='90' fill='white' font-family='Arial'>👶</text></svg>">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <title>{% block title %}Child Guard{% endblock %}</title>
+    <title>{% block title %}EMO_TRACK | Child Guard{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+      window.tailwind = {
+        config: {
+          prefix: 'tw-',
+          corePlugins: {
+            preflight: false
+          }
+        }
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
       :root {
@@ -23,9 +35,7 @@
         --text-light: #666;
       }
       
-      * {
-        font-size: 14px !important;
-      }
+      /* Removed global font-size override to allow component-level control */
       
       h1 { font-size: 1.75rem !important; }
       h2 { font-size: 1.5rem !important; }
@@ -133,13 +143,265 @@
       .phone-content {
         background: transparent;
       }
+
+      /* Live Icon Animations */
+      .live-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .live-icon:hover {
+        transform: scale(1.2) rotate(5deg);
+      }
+
+      .live-icon.pulse {
+        animation: icon-pulse 2s infinite ease-in-out;
+      }
+
+      @keyframes icon-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+      }
+
+      /* Premium Floating Nav */
+      .floating-nav {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 24px;
+        padding: 8px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        width: max-content;
+        max-width: calc(100vw - 48px);
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      body.dashboard-mobile-preview .floating-nav {
+        position: absolute;
+        bottom: 12px;
+        width: calc(100% - 32px);
+        max-width: 390px;
+        padding: 4px 8px;
+        gap: 2px;
+        border-radius: 20px;
+      }
+      
+      body.dashboard-mobile-preview .floating-nav .nav-item {
+        min-width: 58px;
+        height: 50px;
+        padding: 0 2px;
+        border-radius: 14px;
+      }
+
+      body.dashboard-mobile-preview .floating-nav .nav-item i {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 2px;
+      }
+
+      body.dashboard-mobile-preview .floating-nav .nav-item span {
+        font-size: 8px !important;
+        letter-spacing: 0;
+      }
+
+      .floating-nav .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 88px;
+        height: 64px;
+        border-radius: 20px;
+        color: var(--dash-muted);
+        text-decoration: none !important;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        flex-shrink: 0;
+        padding: 0 4px;
+      }
+
+      .floating-nav .nav-item i {
+        width: 24px;
+        height: 24px;
+        margin-bottom: 4px;
+        transition: transform 0.3s ease;
+      }
+
+      .floating-nav .nav-item span {
+        font-size: 10px !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        opacity: 0.8;
+      }
+
+      .floating-nav .nav-item:hover {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--dash-primary);
+      }
+
+      .floating-nav .nav-item:hover i {
+        transform: translateY(-2px);
+      }
+
+      .floating-nav .nav-item.active {
+        background: var(--dash-primary);
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+        transform: translateY(-8px) scale(1.05);
+      }
+
+      .floating-nav .nav-item.active i {
+        transform: scale(1.1);
+      }
+
+      .floating-nav .nav-item.active span {
+        opacity: 1;
+      }
+
+      /* Active Indicator Dot Removed for Cleaner Look */
+      .floating-nav .nav-item.active::after { display: none; }
+
+      @media (max-width: 600px) {
+        .floating-nav {
+          padding: 6px;
+          gap: 4px;
+          bottom: 20px;
+          width: calc(100% - 32px);
+          border-radius: 24px;
+        }
+        .floating-nav .nav-item {
+          min-width: 62px;
+          height: 52px;
+          border-radius: 18px;
+        }
+        .floating-nav .nav-item.active {
+          transform: translateY(-12px) scale(1.08);
+        }
+        .floating-nav .nav-item i {
+          width: 20px;
+          height: 20px;
+          margin-bottom: 1px;
+        }
+        .floating-nav .nav-item span {
+          font-size: 8px !important;
+          font-weight: 800;
+        }
+      }
+
+      /* Animated Confirmation Modal */
+      #confirmModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(23, 32, 51, 0.4);
+        backdrop-filter: blur(8px);
+      }
+
+      .confirm-box {
+        background: #fff;
+        width: min(400px, calc(100vw - 40px));
+        padding: 32px;
+        border-radius: 28px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        transform: scale(0.9);
+        opacity: 0;
+      }
+
+      .confirm-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+      }
+
+      .confirm-title {
+        font-size: 1.25rem;
+        font-weight: 850;
+        color: var(--dash-ink);
+        margin-bottom: 8px;
+      }
+
+      .confirm-text {
+        color: var(--dash-muted);
+        font-size: 0.95rem;
+        margin-bottom: 24px;
+      }
+
+      .confirm-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .confirm-actions button {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 800;
+        border: 0;
+        transition: all 0.2s ease;
+      }
+
+      .btn-cancel {
+        background: #f1f5f9;
+        color: var(--dash-muted);
+      }
+
+      .btn-confirm {
+        background: #ef4444;
+        color: white;
+      }
+
+      .btn-confirm:hover { background: #dc2626; transform: translateY(-2px); }
+      .btn-cancel:hover { background: #e2e8f0; }
+
+      /* Form Validation Styles */
+      .form-control:invalid:not(:placeholder-shown) {
+        border-color: #ef4444 !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23ef4444' viewBox='0 0 16 16'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3E%3Cpath d='M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+      }
+
+      .form-control:valid:not(:placeholder-shown) {
+        border-color: #22c55e !important;
+      }
     </style>
   </head>
   <body>
     <div class="phone-frame">
       <nav class="navbar navbar-expand sticky-top">
         <div class="container-fluid px-3">
-          <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">👶 Child Guard</a>
+          <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+            <span class="live-icon"><i data-lucide="baby" class="me-1"></i></span> Child Guard
+          </a>
           <div class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
               <span class="nav-link small" style="font-size: 0.8rem !important; font-weight: 500;">{{ current_user.username }}</span>
@@ -170,8 +432,39 @@
       </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmModal">
+      <div class="confirm-box">
+        <div class="confirm-icon">
+          <i data-lucide="alert-triangle" style="width: 32px; height: 32px;"></i>
+        </div>
+        <div class="confirm-title">Are you sure?</div>
+        <div class="confirm-text">This action cannot be undone.</div>
+        <div class="confirm-actions">
+          <button type="button" class="btn-cancel" id="cancelConfirm">Cancel</button>
+          <button type="button" class="btn-confirm" id="executeConfirm">Delete</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script>
+      // Helper function to safely create icons
+      function refreshIcons() {
+        if (window.lucide) {
+          lucide.createIcons({
+            attrs: {
+              class: 'lucide-icon'
+            }
+          });
+        }
+      }
+
+      // Initialize Lucide
+      refreshIcons();
+
       // تسجيل Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('{{ url_for("static", filename="service-worker.js") }}')
@@ -241,8 +534,116 @@
       document.addEventListener('DOMContentLoaded', () => {
         requestLocationPermission();
         requestNotificationPermission();
+
+        // Animated Confirmation logic
+        window.customConfirm = function(options = {}) {
+          return new Promise((resolve) => {
+            const modal = document.getElementById('confirmModal');
+            const box = modal.querySelector('.confirm-box');
+            const cancelBtn = document.getElementById('cancelConfirm');
+            const confirmBtn = document.getElementById('executeConfirm');
+            
+            modal.style.display = 'flex';
+            gsap.to(box, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' });
+            
+            const cleanup = (result) => {
+              gsap.to(box, { scale: 0.9, opacity: 0, duration: 0.25, onComplete: () => {
+                modal.style.display = 'none';
+                resolve(result);
+              }});
+            };
+            
+            cancelBtn.onclick = () => cleanup(false);
+            confirmBtn.onclick = () => cleanup(true);
+          });
+        };
+
+        // Auto-attach to delete buttons
+        document.addEventListener('submit', async (e) => {
+          if (e.target.dataset.confirmAnimated !== undefined) {
+            e.preventDefault();
+            const confirmed = await window.customConfirm();
+            if (confirmed) {
+              delete e.target.dataset.confirmAnimated;
+              e.target.submit();
+            }
+          }
+        });
+
+        const previewShell = document.querySelector('.child-tool-preview, .dashboard-preview-frame');
+        if (previewShell) {
+          document.body.classList.add('dashboard-preview-enabled');
+          const desktopPreviewBtn = document.getElementById('desktop-preview-btn');
+          const mobilePreviewBtn = document.getElementById('mobile-preview-btn');
+          const childId = previewShell.dataset.childId;
+
+          function applyPreviewMode(mode) {
+            const isMobile = mode === 'mobile';
+            document.body.classList.toggle('dashboard-mobile-preview', isMobile);
+            if (desktopPreviewBtn && mobilePreviewBtn) {
+              desktopPreviewBtn.classList.toggle('active', !isMobile);
+              mobilePreviewBtn.classList.toggle('active', isMobile);
+              desktopPreviewBtn.setAttribute('aria-pressed', String(!isMobile));
+              mobilePreviewBtn.setAttribute('aria-pressed', String(isMobile));
+            }
+            localStorage.setItem('dashboardPreviewMode', isMobile ? 'mobile' : 'desktop');
+          }
+
+          applyPreviewMode(localStorage.getItem('dashboardPreviewMode') || 'desktop');
+          desktopPreviewBtn?.addEventListener('click', () => applyPreviewMode('desktop'));
+          mobilePreviewBtn?.addEventListener('click', () => applyPreviewMode('mobile'));
+
+          if (childId && !document.querySelector('.floating-nav')) {
+            const nav = document.createElement('nav');
+            nav.className = 'floating-nav';
+            nav.setAttribute('aria-label', 'Child dashboard navigation');
+            const items = [
+              ['Dashboard', `/dashboard?child_id=${childId}`, 'layout-dashboard'],
+              ['Camera', `/child/${childId}/camera`, 'camera'],
+              ['Recordings', `/child/${childId}/daily-recordings`, 'video'],
+              ['Zones', `/child/${childId}/locations`, 'map-pin'],
+              ['Care', `/child/${childId}/medical`, 'heart-pulse'],
+            ];
+            const currentPath = window.location.pathname;
+            nav.innerHTML = items.map(([label, href, icon]) => {
+              const path = href.split('?')[0];
+              const isActive = currentPath === path || (label === 'Dashboard' && currentPath === '/dashboard');
+              return `<a href="${href}" class="nav-item ${isActive ? 'active' : ''}" title="${label}"><i data-lucide="${icon}"></i><span>${label}</span></a>`;
+            }).join('');
+            
+            // Append to body or phone frame
+            if (document.body.classList.contains('dashboard-preview-enabled')) {
+              document.querySelector('.dashboard-preview-frame')?.appendChild(nav);
+            } else {
+              document.body.appendChild(nav);
+            }
+            
+            if (window.lucide) {
+              lucide.createIcons({
+                root: nav,
+                attrs: {
+                  class: 'lucide-icon'
+                }
+              });
+            }
+            
+            // GSAP Entrance
+            if (window.gsap) {
+              gsap.fromTo(nav.querySelectorAll('.nav-item'), 
+                { y: 40, opacity: 0 },
+                { 
+                  y: 0, 
+                  opacity: 1, 
+                  duration: 0.6, 
+                  stagger: 0.1, 
+                  ease: 'back.out(1.7)',
+                  delay: 0.2
+                }
+              );
+            }
+          }
+        }
       });
     </script>
   </body>
 </html>
-

@@ -1,65 +1,28 @@
-# Virtual Environments
-env/
-venv/
-.venv/
-ENV/
-env.bak/
-venv.bak/
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
+.venv/
 .Python
+instance/
+watch_logs.txt
+static/latest_capture.jpg
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.metadata
 build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
 # IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 .DS_Store
-
-# Flask
-instance/
-.webassets-cache
-
-# Uploads and media
-uploads/
-recordings/
-reports/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Environment variables
-.env
-.env.local
 
 # OS
 __MACOSX/
-.venv/
-.vscode/
-
-# Project specific
-weights/
-*.pt
-yolov8n.pt
+Thumbs.db

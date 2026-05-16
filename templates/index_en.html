@@ -3,17 +3,173 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-panel-strong: #ffffff;
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-primary-dark: #1d4ed8;
+    --dash-radius: 12px;
   }
   
+  /* Layout Overrides to prevent 'squeezed' look */
+  .phone-frame,
+  .phone-content,
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .phone-frame {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
   body {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-medium) 50%, var(--accent-pink) 100%);
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
     min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0 !important;
+  }
+
+  /* Preview Frame Logic */
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 20px auto 48px;
+    padding: 10px !important;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  .home-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 20px 15px 60px;
+  }
+
+  body.dashboard-mobile-preview .home-shell {
+    width: 100%;
+    padding: 20px 10px;
+    max-height: 804px;
+    overflow-y: auto;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
+  }
+
+  body.dashboard-mobile-preview .hero-section h1 {
+    font-size: 2.2rem !important;
+  }
+
+  body.dashboard-mobile-preview .hero-section p {
+    font-size: 1.1rem !important;
+  }
+
+  body.dashboard-mobile-preview .cta-section h2 {
+    font-size: 1.8rem !important;
+  }
+
+  body.dashboard-mobile-preview .features-section .col-md-4,
+  body.dashboard-mobile-preview .stats-section .col-md-3 {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+
+  body.dashboard-mobile-preview .stats-section .row {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  body.dashboard-mobile-preview .feature-card {
+    padding: 24px 16px !important;
+  }
+
+  body.dashboard-mobile-preview .hero-icon i {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  body.dashboard-mobile-preview .hero-section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  body.dashboard-mobile-preview .features-section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  body.dashboard-mobile-preview .cta-section {
+    padding: 40px 20px !important;
+  }
+
+  body.dashboard-mobile-preview .home-container {
+    padding: 20px 10px !important;
   }
   
   .home-container {
@@ -22,13 +178,15 @@
   
   .hero-section {
     text-align: center;
-    padding-top: 60px !important;
-    padding-bottom: 60px !important;
+    padding-top: 80px !important;
+    padding-bottom: 80px !important;
   }
   
   .hero-icon {
-    font-size: 5rem;
-    animation: bounce 2s infinite;
+    font-size: 5.5rem;
+    animation: bounce 2.5s infinite ease-in-out;
+    margin-bottom: 24px;
+    display: inline-block;
   }
   
   @keyframes bounce {
@@ -37,102 +195,117 @@
   }
   
   .hero-section h1 {
-    color: var(--text-dark);
-    font-weight: 800;
-    font-size: 3.5rem;
-    margin-bottom: 20px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: var(--dash-ink);
+    font-weight: 850;
+    font-size: 4rem;
+    margin-bottom: 24px;
+    letter-spacing: -0.03em;
   }
   
   .hero-section p {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 500;
-    max-width: 600px;
+    max-width: 650px;
     margin-left: auto;
     margin-right: auto;
+    color: var(--dash-muted);
+    line-height: 1.6;
   }
   
   .btn-primary {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
+    background: var(--dash-primary);
     border: none;
-    color: white;
-    padding: 15px 40px;
-    border-radius: 12px;
-    font-weight: 700;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.3);
+    color: white !important;
+    padding: 16px 42px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.25);
   }
   
   .btn-primary:hover {
+    background: var(--dash-primary-dark);
     transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(95, 174, 233, 0.4);
-    color: white;
+    box-shadow: 0 15px 40px rgba(37, 99, 235, 0.35);
   }
   
   .btn-outline-primary {
-    color: white;
-    border: 2px solid white;
-    background: transparent;
-    font-weight: 700;
-    transition: all 0.3s ease;
+    color: var(--dash-ink);
+    border: 2px solid var(--dash-line);
+    background: rgba(255, 255, 255, 0.6);
+    padding: 16px 42px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(10px);
   }
   
   .btn-outline-primary:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: #fff;
+    color: var(--dash-primary);
     transform: translateY(-3px);
-    border-color: white;
+    border-color: var(--dash-primary);
   }
   
   .features-section {
     padding-top: 80px !important;
-    padding-bottom: 60px !important;
+    padding-bottom: 80px !important;
   }
   
   .feature-card {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    background: var(--dash-panel);
+    border-radius: 24px;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
     text-align: center;
     transition: all 0.3s ease;
     height: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
+    padding: 32px;
+    border: 1px solid var(--dash-line);
+    backdrop-filter: blur(20px);
   }
   
   .feature-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
-    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.12);
+    border-color: var(--dash-primary);
   }
   
   .feature-icon {
-    font-size: 3rem;
+    font-size: 3.2rem;
+    margin-bottom: 20px;
+    display: block;
   }
   
   .feature-card h5 {
-    color: var(--text-dark);
+    color: var(--dash-ink);
+    font-weight: 800;
+    margin-bottom: 12px;
   }
   
   .feature-card p {
-    color: var(--text-light);
+    color: var(--dash-muted);
+    font-weight: 500;
+    line-height: 1.5;
   }
   
   .stats-section {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 50px 40px;
-    margin: 60px 0;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
+    background: var(--dash-panel);
+    border-radius: 24px;
+    padding: 60px 40px;
+    margin: 80px 0;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--dash-line);
+    backdrop-filter: blur(20px);
   }
   
   .stats-section h2 {
-    color: var(--text-dark);
-    font-weight: 700;
-    margin-bottom: 40px;
+    color: var(--dash-ink);
+    font-weight: 850;
+    margin-bottom: 48px;
     text-align: center;
+    letter-spacing: -0.02em;
   }
   
   .stat-item {
@@ -141,51 +314,72 @@
   }
   
   .stat-number {
-    font-size: 2.5rem;
-    color: var(--primary-medium);
-    font-weight: 800;
+    font-size: 3rem;
+    color: var(--dash-primary);
+    font-weight: 900;
+    letter-spacing: -0.03em;
   }
   
   .stat-text {
-    color: var(--text-light);
+    color: var(--dash-muted);
     margin-top: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
   }
   
   .cta-section {
     text-align: center;
-    padding: 60px 40px;
+    padding: 80px 40px;
     color: white;
+    border-radius: 32px;
   }
   
   .cta-section h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 30px;
+    font-size: 3rem;
+    font-weight: 850;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
   }
   
   .cta-section p {
-    font-size: 1.1rem;
-    max-width: 600px;
+    font-size: 1.2rem;
+    max-width: 650px;
     margin: 0 auto 40px;
-    opacity: 0.95;
+    opacity: 0.9;
+    font-weight: 500;
   }
 </style>
 
-<div class="home-container">
+<div class="dashboard-preview-frame">
+  <div class="home-shell">
+    <div class="preview-toolbar" aria-label="Home preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
+
+    <div class="home-container">
   <div class="container">
     <!-- Hero Section -->
     <div class="hero-section">
-      <div class="hero-icon">👶</div>
+      <div class="hero-icon">
+        <span class="live-icon pulse"><i data-lucide="baby" style="width: 80px; height: 80px;"></i></span>
+      </div>
       <h1>Child Guard</h1>
       <p>Keep Your Family Safe with Advanced Tracking & Health Monitoring</p>
       
       {% if current_user.is_authenticated %}
-        <a class="btn btn-primary btn-lg mt-5" href="{{ url_for('dashboard') }}">
-          Go to Dashboard
-        </a>
+        <div class="tw-mt-10 tw-flex tw-justify-center">
+          <a class="btn btn-primary btn-lg" href="{{ url_for('dashboard') }}">
+            Go to Dashboard
+          </a>
+        </div>
       {% else %}
-        <div class="mt-5">
-          <a class="btn btn-primary btn-lg" href="{{ url_for('register') }}" style="margin-right: 15px;">
+        <div class="tw-mt-10 tw-flex tw-flex-wrap tw-justify-center tw-gap-4">
+          <a class="btn btn-primary btn-lg" href="{{ url_for('register') }}">
             Create Account
           </a>
           <a class="btn btn-outline-primary btn-lg" href="{{ url_for('login') }}">
@@ -201,42 +395,54 @@
       <div class="row">
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">📍</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="map-pin" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Real-Time Tracking</h5>
             <p>Monitor your child's location in real-time with safe zone alerts</p>
           </div>
         </div>
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">🏥</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="hospital" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Health Records</h5>
             <p>Store diseases, medications, and medical appointments securely</p>
           </div>
         </div>
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">🔔</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="bell" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Smart Alerts</h5>
             <p>Get instant notifications for important events and emergencies</p>
           </div>
         </div>
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">📱</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="smartphone" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Mobile App</h5>
             <p>Full functionality as a progressive web app on any device</p>
           </div>
         </div>
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="shield" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Secure & Private</h5>
             <p>Enterprise-grade security for your family's sensitive data</p>
           </div>
         </div>
         <div class="col-md-4 mb-4">
           <div class="feature-card">
-            <div class="feature-icon">👥</div>
+            <div class="feature-icon">
+              <span class="live-icon"><i data-lucide="users" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+            </div>
             <h5>Multi-Child Support</h5>
             <p>Manage and track multiple children with one account</p>
           </div>
@@ -261,8 +467,10 @@
           <div class="stat-text">Safe Zones</div>
         </div>
         <div class="col-md-3 stat-item">
-          <div class="stat-number">📲</div>
-          <div class="stat-text">App & Web</div>
+          <div class="stat-number">
+            <span class="live-icon"><i data-lucide="zap" class="me-1"></i></span> App & Web
+          </div>
+          <div class="stat-text">Universal Access</div>
         </div>
       </div>
     </div>
@@ -277,6 +485,8 @@
         Get Started Now
       </a>
     {% endif %}
+  </div>
+    </div>
   </div>
 </div>
 

@@ -3,22 +3,34 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-panel-strong: #ffffff;
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-primary-dark: #1d4ed8;
+    --dash-radius: 12px;
+  }
+  
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
+    min-height: 100vh;
+    padding: 40px 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
   
   .add-child-container {
     max-width: 500px;
     margin: 40px auto;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: var(--dash-panel);
+    border-radius: 24px;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12);
     padding: 50px 40px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid var(--dash-line);
     backdrop-filter: blur(20px);
   }
   
@@ -28,83 +40,110 @@
   }
   
   .add-child-header h2 {
-    font-size: 1.8rem;
-    color: var(--text-dark);
-    font-weight: 700;
-    margin-bottom: 10px;
+    font-size: 2rem;
+    color: var(--dash-ink);
+    font-weight: 850;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
   }
   
   .add-child-header p {
-    color: var(--text-light);
+    color: var(--dash-muted);
+    font-size: 1rem;
+    font-weight: 500;
   }
   
   .form-group {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
   }
   
   .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
+    font-weight: 700;
+    color: var(--dash-ink);
     margin-bottom: 8px;
     display: block;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   
   .form-control,
   .form-select {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 12px 15px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border: 1.5px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #f8fbff;
+    color: var(--dash-ink);
   }
   
   .form-control:focus,
   .form-select:focus {
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     outline: none;
+    background: #fff;
   }
   
   .btn-add-child {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    border: none;
+    background: var(--dash-primary);
+    border: 0;
     color: white;
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 600;
+    padding: 16px;
+    border-radius: var(--dash-radius);
+    font-weight: 800;
     width: 100%;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
     cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
   
   .btn-add-child:hover {
+    background: var(--dash-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
   }
   
   .btn-cancel {
-    background: #f0f0f0;
-    border: none;
-    color: var(--text-dark);
-    padding: 14px;
-    border-radius: 10px;
-    font-weight: 600;
+    background: #f1f5f9;
+    border: 1px solid var(--dash-line);
+    color: var(--dash-ink);
+    padding: 16px;
+    border-radius: var(--dash-radius);
+    font-weight: 700;
     width: 100%;
     font-size: 1rem;
-    transition: all 0.3s ease;
-    margin-top: 10px;
+    transition: all 0.2s ease;
+    margin-top: 12px;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
   }
   
   .btn-cancel:hover {
-    background: #e0e0e0;
+    background: #e2e8f0;
+    color: var(--dash-ink);
+  }
+
+  .alert {
+    border: 0;
+    border-radius: var(--dash-radius);
+    margin-bottom: 24px;
+    padding: 16px;
+    font-weight: 600;
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
   }
 </style>
 
 <div class="add-child-container">
   <div class="add-child-header">
-    <h2>➕ Add New Child</h2>
+    <div class="mb-3">
+      <span class="live-icon"><i data-lucide="plus-circle" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+    </div>
+    <h2>Add New Child</h2>
     <p>Create a profile for your child</p>
   </div>
 
@@ -130,8 +169,8 @@
         <div class="form-group">
           <label class="form-label">Gender</label>
           <select class="form-select" name="gender">
-            <option value="boy">👦 Boy</option>
-            <option value="girl">👧 Girl</option>
+            <option value="boy">Boy</option>
+            <option value="girl">Girl</option>
           </select>
         </div>
       </div>
@@ -145,7 +184,8 @@
 
     <div class="form-group">
       <label class="form-label">Bracelet Code (Device ID)</label>
-      <input type="text" class="form-control" name="bracelet_code" placeholder="Device identifier" required>
+      <input type="text" class="form-control" name="bracelet_code" placeholder="Leave empty to auto-generate">
+      <small class="text-muted mt-1 d-block">Each watch needs a unique code to sync data.</small>
     </div>
 
     <button type="submit" class="btn btn-add-child">Add Child</button>

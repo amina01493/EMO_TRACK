@@ -3,363 +3,1316 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-panel-strong: #ffffff;
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-primary-dark: #1d4ed8;
+    --dash-cyan: #0891b2;
+    --dash-pink: #db2777;
+    --dash-green: #16a34a;
+    --dash-amber: #d97706;
+    --dash-red: #dc2626;
+    --dash-radius: 8px;
   }
-  
-  * {
-    font-size: 13px !important;
+
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
+    color: var(--dash-ink);
   }
-  
-  h2 { font-size: 1.25rem !important; }
-  h3 { font-size: 1.1rem !important; }
-  h5 { font-size: 0.95rem !important; }
-  h6 { font-size: 0.85rem !important; }
-  p { font-size: 0.9rem !important; }
-  
-  .btn-theme {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%) !important;
-    border: none !important;
-    color: white !important;
-    transition: all 0.3s ease;
-    font-size: 0.9rem !important;
+
+  .phone-frame,
+  .phone-content,
+  .container {
+    max-width: none !important;
+    width: 100% !important;
   }
-  
-  .btn-theme:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white !important;
+
+  .phone-frame {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
   }
-  
+
+  .phone-frame::before {
+    display: none !important;
+  }
+
+  .dashboard-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 10px 8px 48px;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
+  }
+
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview {
+    background:
+      radial-gradient(circle at 16% 10%, rgba(37, 99, 235, 0.2), transparent 28%),
+      linear-gradient(135deg, #dbeafe 0%, #f8fbff 52%, #fce7f3 100%) !important;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 10px auto 48px;
+    padding: 10px;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #fff;
+    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+    position: relative;
+  }
+
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .loading-text {
+    animation: pulse-opacity 2s infinite ease-in-out;
+    font-style: italic;
+    color: var(--dash-muted) !important;
+  }
+
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  body.dashboard-mobile-preview .dashboard-shell {
+    width: 100%;
+    padding: 100px 10px 140px !important; /* Extra padding to ensure visibility */
+    max-height: 804px;
+    overflow-y: auto;
+    background: #f8fbff;
+  }
+
+  body.dashboard-mobile-preview .dashboard-topbar,
+  body.dashboard-mobile-preview .dashboard-grid,
+  body.dashboard-mobile-preview .split-two {
+    grid-template-columns: 1fr;
+  }
+
+  body.dashboard-mobile-preview .metric-grid,
+  body.dashboard-mobile-preview .action-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.dashboard-mobile-preview .watch-stage,
+  body.dashboard-mobile-preview .watch-stage img {
+    min-height: 310px;
+  }
+
+  body.dashboard-mobile-preview .watch-route {
+    display: none;
+  }
+
+  body.dashboard-mobile-preview .dashboard-title {
+    font-size: 1.35rem !important;
+  }
+
+  body.dashboard-mobile-preview .preview-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .dashboard-topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 18px;
+  }
+
+  .eyebrow {
+    margin-bottom: 6px;
+    color: var(--dash-cyan);
+    font-size: 0.78rem !important;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .dashboard-title {
+    margin: 0;
+    color: var(--dash-ink);
+    font-size: 1.8rem !important;
+    font-weight: 800;
+  }
+
+  .dashboard-subtitle {
+    max-width: 680px;
+    margin: 8px 0 0;
+    color: var(--dash-muted);
+  }
+
+  .child-selector {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 8px;
+  }
+
   .child-btn {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 5px;
-    border-radius: 10px;
-    background: #f0f0f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 9px 13px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--dash-ink);
+    font-weight: 700;
     text-decoration: none;
-    color: var(--text-dark);
-    border: 2px solid transparent;
-    transition: all 0.3s;
-    font-weight: 500;
-    font-size: 0.85rem !important;
+    box-shadow: none;
   }
-  
-  .child-btn:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-  }
-  
+
+  .child-btn:hover,
   .child-btn.active {
-    background: var(--primary-medium);
-    color: white;
-    border-color: var(--primary-dark);
+    background: var(--dash-primary);
+    border-color: var(--dash-primary);
+    color: #fff;
   }
-  
-  .status-card {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+
+  .watch-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 11px;
+    border: 1px solid rgba(22, 163, 74, 0.2);
+    border-radius: 999px;
+    background: rgba(22, 163, 74, 0.1);
+    color: #166534;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .watch-live-pill.offline {
+    border-color: rgba(220, 38, 38, 0.22);
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
+  }
+
+  .live-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 99px;
+    background: var(--dash-green);
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.14);
+  }
+
+  .watch-live-pill.offline .live-dot {
+    background: var(--dash-red);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.12);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+    gap: 16px;
+    padding: 0;
+  }
+
+  .panel,
+  .card {
+    border: 1px solid var(--dash-line) !important;
+    border-radius: var(--dash-radius) !important;
+    background: var(--dash-panel) !important;
+    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden;
+  }
+
+  .panel-header,
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--dash-line) !important;
+    background: rgba(255, 255, 255, 0.58) !important;
+    color: var(--dash-ink) !important;
+    font-weight: 800;
+  }
+
+  .panel-body,
+  .card-body {
+    padding: 16px !important;
+  }
+
+  .watch-stage {
+    position: relative;
+    height: 480px;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.1), rgba(15, 23, 42, 0.7)),
+      #101828;
+    border-radius: 0 0 var(--dash-radius) var(--dash-radius);
+    overflow: hidden;
+  }
+
+  .watch-stage img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .feed-badge,
+  .emotion-overlay,
+  .watch-route {
+    position: absolute;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--dash-radius);
+    background: rgba(15, 23, 42, 0.76);
+    color: #fff;
     backdrop-filter: blur(10px);
   }
-  
-  .status-card:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.25);
+
+  .feed-badge {
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    font-weight: 800;
   }
-  
-  .status-card div {
+
+  .emotion-overlay {
+    right: 14px;
+    bottom: 14px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 10px;
+    align-items: center;
+    min-width: 180px;
+    padding: 10px 12px;
+  }
+
+  .emotion-overlay .emoji {
+    grid-row: span 2;
     font-size: 2rem !important;
   }
-  
+
+  .emotion-overlay strong {
+    font-size: 1rem !important;
+  }
+
+  .emotion-overlay small {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .watch-route {
+    left: 14px;
+    bottom: 14px;
+    max-width: min(460px, calc(100% - 28px));
+    padding: 10px 12px;
+  }
+
+  .watch-route span {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.78rem !important;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .watch-route p {
+    margin: 3px 0 0;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .metric-card {
+    min-height: 118px;
+    padding: 14px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: var(--dash-panel-strong);
+  }
+
+  .metric-card .label {
+    color: var(--dash-muted);
+    font-size: 0.78rem !important;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .metric-card .value {
+    margin: 10px 0 4px;
+    color: var(--dash-ink);
+    font-size: 1.35rem !important;
+    font-weight: 850;
+  }
+
+  .metric-card .hint {
+    color: var(--dash-muted);
+  }
+
+  .metric-card.safe {
+    border-color: rgba(22, 163, 74, 0.2);
+    background: linear-gradient(180deg, #fff, rgba(22, 163, 74, 0.08));
+  }
+
+  .metric-card.attention {
+    border-color: rgba(217, 119, 6, 0.22);
+    background: linear-gradient(180deg, #fff, rgba(217, 119, 6, 0.08));
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .dashboard-action,
+  .btn-theme {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 12px !important;
+    border: 0 !important;
+    border-radius: var(--dash-radius) !important;
+    background: var(--dash-primary) !important;
+    color: #fff !important;
+    font-weight: 800 !important;
+    text-decoration: none;
+  }
+
+  .dashboard-action.secondary {
+    border: 1px solid var(--dash-line) !important;
+    background: #fff !important;
+    color: var(--dash-ink) !important;
+  }
+
+  .dashboard-action.danger {
+    background: var(--dash-red) !important;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 6px !important;
+    border: 1px solid var(--dash-line) !important;
+    margin: 24px 0 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 14px !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
   .nav-tabs .nav-link {
-    color: var(--text-light);
-    border: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    font-size: 0.85rem !important;
-    padding: 0.5rem 0.75rem !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    padding: 10px 20px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    color: var(--dash-muted) !important;
+    font-weight: 800 !important;
+    white-space: nowrap;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0;
   }
-  
-  .nav-tabs .nav-link:hover {
-    color: var(--primary-medium);
-    border-bottom-color: var(--primary-light);
+
+  .nav-tabs .nav-link:hover:not(.active) {
+    background: rgba(37, 99, 235, 0.08) !important;
+    color: var(--dash-primary) !important;
+    transform: translateY(-1px);
   }
-  
+
   .nav-tabs .nav-link.active {
-    color: var(--primary-medium);
-    background: none;
-    border-bottom-color: var(--primary-medium);
-    font-weight: 600;
+    background: var(--dash-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
   }
-  
-  .card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+
+  .list-stack {
+    display: grid;
+    gap: 10px;
   }
-  
-  .card-header {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    color: white;
-    border-radius: 15px 15px 0 0 !important;
-    padding: 12px 15px !important;
+
+  .data-row {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--dash-line);
+    border-radius: var(--dash-radius);
+    background: #fff;
   }
-  
-  .card-header h5 {
-    font-size: 0.95rem !important;
-    margin-bottom: 0 !important;
+
+  .data-row strong {
+    color: var(--dash-ink);
   }
-  
-  .card-body {
-    padding: 15px !important;
+
+  .data-row small,
+  .empty-copy {
+    color: var(--dash-muted);
+  }
+
+  .split-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .side-stack {
+    display: grid;
+    gap: 16px;
+  }
+
+  .watch-device {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .watch-face {
+    width: 76px;
+    aspect-ratio: 1;
+    border: 8px solid #172033;
+    border-radius: 28px;
+    background: linear-gradient(145deg, #0f172a, #1d4ed8);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 1.7rem !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+
+  .device-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--dash-line);
+  }
+
+  .device-row span {
+    color: var(--dash-muted);
+  }
+
+  .device-row strong {
+    color: var(--dash-ink);
+  }
+
+  .mini-map {
+    min-height: 190px;
+    padding: 14px;
+    border-radius: var(--dash-radius);
+    background:
+      linear-gradient(90deg, rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+      linear-gradient(rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+      linear-gradient(135deg, #f8fbff, #eef7ff);
+    background-size: 24px 24px, 24px 24px, auto;
+    position: relative;
+  }
+
+  .zone-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0 6px 8px 0;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--dash-ink);
+    border: 1px solid var(--dash-line);
+    font-weight: 700;
+  }
+
+  .zone-chip::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 99px;
+    background: var(--dash-green);
+  }
+
+  .empty-dashboard {
+    padding: 32px;
+    text-align: center;
+  }
+
+  @media (max-width: 980px) {
+    .dashboard-topbar,
+    .dashboard-grid,
+    .split-two {
+      grid-template-columns: 1fr;
+    }
+
+    .metric-grid,
+    .action-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 560px) {
+    .dashboard-shell {
+      padding: 8px 0 36px;
+    }
+
+    .dashboard-title {
+      font-size: 1.45rem !important;
+    }
+
+    .watch-stage,
+    .watch-stage img {
+      min-height: 290px;
+    }
+
+    .metric-grid,
+    .action-row {
+      grid-template-columns: 1fr;
+    }
+
+    .watch-route {
+      display: none;
+    }
   }
 </style>
 
-<div class="container-fluid pt-3 pb-5" style="background: transparent;">
-  <div class="mb-3">
-    <h2 class="fw-bold text-white mb-3" style="font-size: 1.3rem !important;">Dashboard</h2>
-
-    <!-- Child Selector -->
+<div class="dashboard-preview-frame"{% if active_child %} data-child-id="{{ active_child.id }}"{% endif %}>
+  <div class="dashboard-shell">
+    <div class="preview-toolbar" aria-label="Dashboard preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active" aria-pressed="true">Desktop</button>
+        <button type="button" id="mobile-preview-btn" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
 
     {% if children %}
-      <div class="mb-4">
-        <h6 class="text-muted mb-3">Select Child:</h6>
-        <div class="child-selector">
-          {% for child in children %}
-            <a href="{{ url_for('dashboard', child_id=child.id) }}" 
-               class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %}">
-              {% if child.gender == 'boy' %}👦{% else %}👧{% endif %} {{ child.name }}
-            </a>
-          {% endfor %}
-          <a href="{{ url_for('add_child') }}" class="child-btn">
-            ➕ Add Child
+      <div class="child-selector mb-3" aria-label="Child selector">
+        {% for child in children %}
+          <a href="{{ url_for('dashboard', child_id=child.id) }}" class="child-btn {% if active_child and active_child.id == child.id %}active{% endif %}">
+            <span>
+              <span class="live-icon">
+                {% if child.gender == 'boy' %}
+                  <i data-lucide="user" class="tw-w-5 tw-h-5"></i>
+                {% else %}
+                  <i data-lucide="user" class="tw-w-5 tw-h-5"></i>
+                {% endif %}
+              </span>
+            </span>
+            <span>{{ child.name }}</span>
           </a>
-        </div>
+        {% endfor %}
+        <a href="{{ url_for('add_child') }}" class="child-btn">
+          <span class="live-icon"><i data-lucide="plus" class="tw-w-5 tw-h-5"></i></span>
+          Add child
+        </a>
       </div>
     {% endif %}
 
     {% if active_child %}
-      <!-- Status Cards -->
-      <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-          <div class="status-card text-center">
-            <div style="font-size: 2.5rem; margin-bottom: 15px;">🛡️</div>
-            <h6 class="text-muted mb-2">Status</h6>
-            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">Safe</p>
-          </div>
+    <div class="dashboard-topbar">
+      <div>
+        <div class="eyebrow">Watch-integrated safety dashboard</div>
+        <div class="d-flex align-items-center gap-3">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="EMO_TRACK Logo" style="width: 48px; height: 48px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <h1 class="dashboard-title" style="margin: 0;">{{ active_child.name }}'s Guardian Dashboard</h1>
         </div>
-        <div class="col-md-4 mb-3">
-          <div class="status-card text-center">
-            <div style="font-size: 2.5rem; margin-bottom: 15px;">❤️</div>
-            <h6 class="text-muted mb-2">Heart Rate</h6>
-            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85 BPM</p>
-          </div>
-        </div>
-        <div class="col-md-4 mb-3">
-          <div class="status-card text-center">
-            <div style="font-size: 2.5rem; margin-bottom: 15px;">🔋</div>
-            <h6 class="text-muted mb-2">Battery</h6>
-            <p style="color: var(--primary-medium); font-size: 1.5rem; font-weight: 700; margin: 0;">85%</p>
-          </div>
-        </div>
+        <p class="dashboard-subtitle">Live camera, emotion detection, watch status, care records, safe zones, and daily recordings are gathered into one guardian view.</p>
       </div>
+      <div id="watch-live-pill" class="watch-live-pill offline">
+        <span class="live-dot"></span>
+        <span id="watch-live-text">Waiting for watch</span>
+      </div>
+    </div>
 
-      <!-- Navigation Tabs -->
-      <ul class="nav nav-tabs mb-4" role="tablist">
-        <li class="nav-item">
-          <a class="nav-link active" href="#medical" data-bs-toggle="tab">
-            🏥 Medical Info
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#locations" data-bs-toggle="tab">
-            📍 Safe Zones
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#reports" data-bs-toggle="tab">
-            📋 Reports
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#recordings" data-bs-toggle="tab">
-            📹 Recordings
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#info" data-bs-toggle="tab">
-            ℹ️ Child Info
-          </a>
-        </li>
-      </ul>
-
-      <!-- Tab Content -->
-      <div class="tab-content">
-        <!-- Medical Tab -->
-        <div class="tab-pane fade show active" id="medical">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="fw-bold mb-0">🏥 Medical Information</h5>
+    <div class="dashboard-grid">
+      <main>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Live Watch Feed</span>
+            <span id="feed-freshness" class="text-muted">No frame yet</span>
+          </div>
+          <div class="watch-stage">
+            <img id="live-feed" src="{{ url_for('static', filename='latest_capture.jpg') }}" alt="Live camera frame from the watch" onerror="this.style.opacity='0.18'">
+            <div class="feed-badge">
+              <span class="live-dot"></span>
+              <span>Watch Camera</span>
             </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <h6 class="fw-bold mb-3">Diseases ({{ active_child.diseases|length }})</h6>
-                  {% if active_child.diseases %}
-                    <ul class="list-unstyled">
-                      {% for disease in active_child.diseases %}
-                        <li class="mb-2 p-3 bg-light rounded">
-                          <strong>{{ disease.name }}</strong>
-                          {% if disease.description %}
-                            <p class="small text-muted mb-0">{{ disease.description }}</p>
-                          {% endif %}
-                        </li>
+            <div class="watch-route">
+              <span>Linked bracelet</span>
+              <p>{{ active_child.bracelet_code }} · monitoring {{ active_child.name }}</p>
+            </div>
+            <div class="emotion-overlay">
+              <span id="overlay-emoji" class="emoji">
+                <span class="live-icon pulse"><i data-lucide="loader-2" class="tw-w-10 tw-h-10"></i></span>
+              </span>
+              <strong id="overlay-text">Detecting</strong>
+              <small id="overlay-confidence">Confidence pending</small>
+            </div>
+          </div>
+        </section>
+
+        <div class="metric-grid">
+          <div class="metric-card safe">
+            <div class="label">Safety</div>
+            <div class="value">Safe</div>
+            <div class="hint">No active alerts</div>
+          </div>
+          <div class="metric-card" id="emotion-card">
+            <div class="label">Live Emotion</div>
+            <div class="value">
+              <span id="emotion-emoji">
+                <span class="live-icon pulse"><i data-lucide="loader-2" class="tw-w-6 tw-h-6"></i></span>
+              </span> 
+              <span id="emotion-text">Waiting</span>
+            </div>
+            <div class="hint" id="emotion-time">Last seen: --:--</div>
+          </div>
+          <div class="metric-card">
+            <div class="label">Heart Rate</div>
+            <div class="value"><span id="heart-rate-value">{{ active_child.heart_rate if active_child.heart_rate else '--' }}</span> BPM</div>
+            <div class="hint">From watch sensor</div>
+          </div>
+          <div class="metric-card" id="battery-card">
+            <div class="label">Watch Battery</div>
+            <div class="value"><span id="battery-value">{{ active_child.battery_level if active_child.battery_level else '--' }}</span>%</div>
+            <div class="hint" id="battery-hint">Ready for the day</div>
+          </div>
+        </div>
+
+        <div class="tw-mb-8"></div>
+
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+              <i data-lucide="layout-dashboard" class="tw-w-4 tw-h-4"></i>
+              Overview
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#medical" type="button">
+              <i data-lucide="heart-pulse" class="tw-w-4 tw-h-4"></i>
+              Medical
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#zones" type="button">
+              <i data-lucide="map-pin" class="tw-w-4 tw-h-4"></i>
+              Zones
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#recordings" type="button">
+              <i data-lucide="video" class="tw-w-4 tw-h-4"></i>
+              Recordings
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button">
+              <i data-lucide="history" class="tw-w-4 tw-h-4"></i>
+              History
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="overview">
+            <div class="split-two">
+              <section class="card">
+                <div class="card-header">
+                  <span>Today's Watch Summary</span>
+                </div>
+                <div class="card-body">
+                  <div class="list-stack">
+                    <div class="data-row">
+                      <strong>Emotion stream</strong>
+                      <small id="summary-emotion">Waiting for the next watch frame.</small>
+                    </div>
+                    <div class="data-row">
+                      <strong>Safe zone coverage</strong>
+                      <small>{{ active_child.locations|length }} zone{{ '' if active_child.locations|length == 1 else 's' }} configured for location checks.</small>
+                    </div>
+                    <div class="data-row">
+                      <strong>Care reminders</strong>
+                      <small>{{ active_child.medications|length }} medication{{ '' if active_child.medications|length == 1 else 's' }} tracked in the medical profile.</small>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <span>Recent Alerts</span>
+                </div>
+                <div class="card-body">
+                  {% if recent_alerts %}
+                    <div class="list-stack">
+                      {% for alert in recent_alerts %}
+                        <div class="data-row">
+                          <strong>{{ alert.alert_type|replace('_', ' ')|title }}</strong>
+                          <small>{{ alert.description or 'No extra details' }} · {{ alert.timestamp.strftime('%Y-%m-%d %H:%M') if alert.timestamp else 'Just now' }}</small>
+                        </div>
                       {% endfor %}
-                    </ul>
+                    </div>
                   {% else %}
-                    <p class="text-muted">No diseases recorded</p>
+                    <p class="empty-copy mb-0">No alerts recorded for {{ active_child.name }}.</p>
                   {% endif %}
                 </div>
-                <div class="col-md-6">
-                  <h6 class="fw-bold mb-3">Medications ({{ active_child.medications|length }})</h6>
-                  {% if active_child.medications %}
-                    <ul class="list-unstyled">
-                      {% for med in active_child.medications %}
-                        <li class="mb-2 p-3 bg-light rounded">
-                          <strong>{{ med.name }}</strong>
-                          <p class="small text-muted mb-0">
-                            {% if med.dosage %}Dosage: {{ med.dosage }} | {% endif %}
-                            {% if med.frequency %}Frequency: {{ med.frequency }}{% endif %}
-                          </p>
-                        </li>
+              </section>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="medical">
+            <div class="split-two">
+              <section class="card">
+                <div class="card-header">
+                  <span>Conditions</span>
+                  <span>{{ active_child.diseases|length }}</span>
+                </div>
+                <div class="card-body">
+                  {% if active_child.diseases %}
+                    <div class="list-stack">
+                      {% for disease in active_child.diseases %}
+                        <div class="data-row">
+                          <strong>{{ disease.name }}</strong>
+                          <small>{{ disease.description or 'No notes added' }}</small>
+                        </div>
                       {% endfor %}
-                    </ul>
+                    </div>
                   {% else %}
-                    <p class="text-muted">No medications recorded</p>
+                    <p class="empty-copy mb-0">No conditions recorded.</p>
+                  {% endif %}
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <span>Medications</span>
+                  <span>{{ active_child.medications|length }}</span>
+                </div>
+                <div class="card-body">
+                  {% if active_child.medications %}
+                    <div class="list-stack">
+                      {% for med in active_child.medications %}
+                        <div class="data-row">
+                          <strong>{{ med.name }}</strong>
+                          <small>{% if med.dosage %}{{ med.dosage }} · {% endif %}{{ med.frequency or 'No frequency set' }}{% if med.schedule_time %} · {{ med.schedule_time }}{% endif %}</small>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p class="empty-copy mb-0">No medications recorded.</p>
+                  {% endif %}
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="zones">
+            <section class="card">
+              <div class="card-header">
+                <span>Safe Zones Linked To Watch</span>
+                <a class="dashboard-action secondary" href="{{ url_for('child_locations', child_id=active_child.id) }}">Manage</a>
+              </div>
+              <div class="card-body">
+                <div class="mini-map">
+                  {% if active_child.locations %}
+                    {% for loc in active_child.locations %}
+                      <span class="zone-chip">{{ loc.name }} · {{ loc.radius|int }}m</span>
+                    {% endfor %}
+                  {% else %}
+                    <p class="empty-copy mb-0">Add home, school, and activity zones so the watch context is visible here.</p>
                   {% endif %}
                 </div>
               </div>
-              <a class="btn btn-theme mt-3" href="{{ url_for('child_medical', child_id=active_child.id) }}">
-                ✏️ Update Medical Info
-              </a>
-            </div>
+            </section>
           </div>
-        </div>
 
-        <!-- Locations Tab -->
-        <div class="tab-pane fade" id="locations">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="fw-bold mb-0">📍 Safe Zones</h5>
-            </div>
-            <div class="card-body">
-              {% if active_child.locations %}
-                <div class="row">
-                  {% for loc in active_child.locations %}
-                    <div class="col-md-6 mb-3">
-                      <div class="p-3 border rounded" style="border-left: 4px solid var(--primary-medium) !important;">
-                        <h6 class="fw-bold">{{ loc.name }}</h6>
-                        <small class="text-muted">
-                          📍 Latitude: {{ "%.4f"|format(loc.latitude) }}<br>
-                          📍 Longitude: {{ "%.4f"|format(loc.longitude) }}<br>
-                          📏 Radius: {{ loc.radius }} m
-                        </small>
+          <div class="tab-pane fade" id="recordings">
+            <section class="card">
+              <div class="card-header">
+                <span>Latest Watch & Daily Media</span>
+                <a class="dashboard-action secondary" href="{{ url_for('daily_recordings', child_id=active_child.id) }}">Open library</a>
+              </div>
+              <div class="card-body">
+                {% if recent_recordings %}
+                  <div class="list-stack">
+                    {% for recording in recent_recordings %}
+                      <div class="data-row">
+                        <strong>{{ recording.recording_type|title }} · {{ recording.description or 'Recording' }}</strong>
+                        <small>{{ recording.uploaded_at.strftime('%Y-%m-%d %H:%M') if recording.uploaded_at else 'Just now' }}</small>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="empty-copy mb-0">No media uploaded yet. Watch captures appear in the live feed, and saved recordings can be added from the library.</p>
+                {% endif %}
+              </div>
+            </section>
+          </div>
+          <div class="tab-pane fade" id="history">
+            <section class="card">
+              <div class="card-header">
+                <span>Location & Telemetry History</span>
+                <span class="text-muted small">Last 50 events</span>
+              </div>
+              <div class="card-body">
+                {% if history %}
+                  <!-- Filter Bar -->
+                  <div class="d-flex flex-wrap gap-2 mb-3 p-2 bg-light rounded" style="border: 1px solid var(--dash-line);">
+                    <div class="flex-grow-1 min-w-[200px]">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0"><i data-lucide="search" style="width: 14px;"></i></span>
+                        <input type="text" id="historySearch" class="form-control border-start-0" placeholder="Search history..." onkeyup="filterHistory()">
                       </div>
                     </div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <p class="text-muted">No safe zones recorded</p>
-              {% endif %}
-              <a class="btn btn-theme mt-3" href="{{ url_for('child_locations', child_id=active_child.id) }}">
-                📍 Manage Safe Zones
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Reports Tab -->
-        <div class="tab-pane fade" id="reports">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="fw-bold mb-0">📋 Medical Reports</h5>
-            </div>
-            <div class="card-body">
-              <p class="text-muted mb-3">Manage doctor's reports and medical documents</p>
-              <a class="btn btn-theme" href="{{ url_for('medical_reports', child_id=active_child.id) }}">
-                📋 View & Upload Reports
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recordings Tab -->
-        <div class="tab-pane fade" id="recordings">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="fw-bold mb-0">📹 Daily Recordings</h5>
-            </div>
-            <div class="card-body">
-              <p class="text-muted mb-3">Upload videos, photos, and audio from daily activities</p>
-              <a class="btn btn-theme" href="{{ url_for('daily_recordings', child_id=active_child.id) }}">
-                📹 View & Upload Recordings
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Info Tab -->
-        <div class="tab-pane fade" id="info">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="fw-bold mb-0">ℹ️ Child Information</h5>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <h6 class="text-muted">Name</h6>
-                  <p class="fw-bold">{{ active_child.name }}</p>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <h6 class="text-muted">Gender</h6>
-                  <p class="fw-bold">
-                    {% if active_child.gender == 'boy' %}👦 Boy{% else %}👧 Girl{% endif %}
-                  </p>
-                </div>
-                {% if active_child.age %}
-                  <div class="col-md-6 mb-3">
-                    <h6 class="text-muted">Age</h6>
-                    <p class="fw-bold">{{ active_child.age }} years</p>
+                    <div class="d-flex gap-2">
+                      <select id="historyFilterType" class="form-select form-select-sm" style="width: 140px;" onchange="filterHistory()">
+                        <option value="all">All Events</option>
+                        <option value="low-battery">Low Battery (< 25%)</option>
+                        <option value="high-hr">High HR (> 100)</option>
+                      </select>
+                      <button class="btn btn-sm btn-outline-secondary" onclick="resetHistoryFilters()">Reset</button>
+                    </div>
                   </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="historyTable">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>Mood</th>
+                          <th>Location</th>
+                          <th>Heart Rate</th>
+                          <th>Battery</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for entry in history %}
+                            <tr class="history-row" 
+                                data-hr="{{ entry.heart_rate or 0 }}" 
+                                data-battery="{{ entry.battery_level or 0 }}"
+                                data-search="{{ entry.timestamp.strftime('%H:%M:%S') if entry.timestamp else '' }} {{ entry.emotion }} {{ entry.latitude }}, {{ entry.longitude }}">
+                              <td class="text-nowrap fw-bold">{{ entry.timestamp.strftime('%H:%M:%S') if entry.timestamp else '--' }}</td>
+                              <td>
+                                {% if entry.emotion %}
+                                  <span class="badge bg-primary-subtle text-primary">
+                                    {{ entry.emotion.capitalize() }} ({{ entry.confidence|round(1) }}%)
+                                  </span>
+                                {% else %}
+                                  <span class="text-muted small">Telemetry</span>
+                                {% endif %}
+                              </td>
+                              <td class="small">{{ entry.latitude|round(6) if entry.latitude else '--' }}, {{ entry.longitude|round(6) if entry.longitude else '--' }}</td>
+                              <td><span class="badge bg-danger-subtle text-danger"><i data-lucide="heart" class="me-1" style="width: 12px;"></i> {{ entry.heart_rate or '--' }}</span></td>
+                              <td><span class="badge bg-success-subtle text-success"><i data-lucide="battery" class="me-1" style="width: 12px;"></i> {{ entry.battery_level or '--' }}%</span></td>
+                            </tr>
+                        {% endfor %}
+
+                      </tbody>
+                    </table>
+                  </div>
+
+                {% else %}
+                  <p class="empty-copy mb-0 text-center py-4">No history records yet. Telemetry data will appear here once the watch syncs.</p>
                 {% endif %}
-                <div class="col-md-6 mb-3">
-                  <h6 class="text-muted">Bracelet Code</h6>
-                  <p class="fw-bold">{{ active_child.bracelet_code }}</p>
-                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <aside class="side-stack">
+        <section class="panel">
+          <div class="panel-header">
+            <span>Watch Device</span>
+          </div>
+          <div class="panel-body">
+            <div class="watch-device mb-3">
+              <div class="watch-face" id="watch-face-emoji">
+                <span class="live-icon"><i data-lucide="watch"></i></span>
+              </div>
+              <div>
+                <strong>{{ active_child.name }}'s watch</strong>
+                <p class="empty-copy mb-0">Camera, emotion detection, location, and care signals are connected to this dashboard.</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+            <div class="device-row"><span>Connection</span><strong id="device-connection">Waiting</strong></div>
+            <div class="device-row"><span>Last frame</span><strong id="device-last-frame">--</strong></div>
+            <div class="device-row"><span>Bracelet code</span><strong>{{ active_child.bracelet_code }}</strong></div>
+            <div class="device-row"><span>GitHub Sync</span><strong id="github-version-text" class="loading-text">Checking...</strong></div>
+            <div class="device-row"><span>Child profile</span><strong>{{ active_child.age or 'Age not set' }}{% if active_child.age %} yrs{% endif %}</strong></div>
 
+          </div>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Remote Control</span>
+          </div>
+          <div class="panel-body">
+            <div class="d-flex flex-column gap-3">
+              <div class="d-flex align-items-center justify-content-between p-3" style="background: var(--dash-card); border-radius: 12px; border: 1px solid var(--dash-line);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="panel-icon" style="background: rgba(37, 99, 235, 0.1); color: var(--dash-primary); width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;">
+                    <i data-lucide="lock" style="width: 20px; height: 20px;"></i>
+                  </div>
+                  <div>
+                    <strong class="d-block">Screen Lock</strong>
+                    <small class="text-muted">Dim screen & disable touch</small>
+                  </div>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="lockWatchSwitch" {% if active_child.is_locked %}checked{% endif %} onchange="toggleWatchLock()">
+                </div>
+              </div>
+              <p class="small text-muted mb-0"><i data-lucide="info" class="me-1" style="width: 14px;"></i> When locked, the watch will dim and controls will be disabled to prevent the child from closing the app.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <span>Care Documents</span>
+            <a class="dashboard-action secondary" href="{{ url_for('medical_reports', child_id=active_child.id) }}">Reports</a>
+          </div>
+          <div class="panel-body">
+            {% if medical_reports %}
+              <div class="list-stack">
+                {% for report in medical_reports %}
+                  <div class="data-row">
+                    <strong>{{ report.title }}</strong>
+                    <small>{{ report.doctor_name or 'Doctor not set' }} · {{ report.uploaded_at.strftime('%Y-%m-%d') if report.uploaded_at else 'Recently' }}</small>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="empty-copy mb-0">No medical reports uploaded yet.</p>
+            {% endif %}
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <span>Guardian Links</span>
+          </div>
+          <div class="panel-body list-stack">
+            <a class="dashboard-action secondary" href="{{ url_for('child_medical', child_id=active_child.id) }}">Update medical profile</a>
+            <a class="dashboard-action secondary" href="{{ url_for('child_locations', child_id=active_child.id) }}">Edit safe zones</a>
+            <a class="dashboard-action secondary" href="{{ url_for('daily_recordings', child_id=active_child.id) }}">Upload daily media</a>
+          </div>
+        </section>
+      </aside>
+    </div>
     {% else %}
-      <div class="alert alert-info mt-4">
-        <h5>👋 Welcome!</h5>
-        <p>Please add a child to get started</p>
-        <a class="btn btn-primary" href="{{ url_for('add_child') }}">➕ Add New Child</a>
-      </div>
+      <section class="panel empty-dashboard">
+        <h1 class="dashboard-title">Welcome to Child Guard</h1>
+        <p class="dashboard-subtitle mx-auto">Add a child profile to connect the watch app, live emotion feed, safe zones, recordings, and care information.</p>
+        <a class="dashboard-action mt-3" href="{{ url_for('add_child') }}">Add your first child</a>
+      </section>
     {% endif %}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const desktopPreviewBtn = document.getElementById('desktop-preview-btn');
+  const mobilePreviewBtn = document.getElementById('mobile-preview-btn');
+
+  function applyPreviewMode(mode) {
+    const isMobile = mode === 'mobile';
+    document.body.classList.toggle('dashboard-mobile-preview', isMobile);
+    if (desktopPreviewBtn && mobilePreviewBtn) {
+      desktopPreviewBtn.classList.toggle('active', !isMobile);
+      mobilePreviewBtn.classList.toggle('active', isMobile);
+      desktopPreviewBtn.setAttribute('aria-pressed', String(!isMobile));
+      mobilePreviewBtn.setAttribute('aria-pressed', String(isMobile));
+    }
+    localStorage.setItem('dashboardPreviewMode', isMobile ? 'mobile' : 'desktop');
+  }
+
+  applyPreviewMode(localStorage.getItem('dashboardPreviewMode') || 'desktop');
+  desktopPreviewBtn?.addEventListener('click', () => applyPreviewMode('desktop'));
+  mobilePreviewBtn?.addEventListener('click', () => applyPreviewMode('mobile'));
+</script>
+
+{% if active_child %}
+<script>
+  const childId = {{ active_child.id }};
+  const iconMap = {
+    happy: 'smile',
+    sad: 'frown',
+    angry: 'angry',
+    fear: 'cloud-lightning',
+    surprise: 'sparkles',
+    neutral: 'meh',
+    disgust: 'frown',
+    waiting: 'loader-2'
+  };
+  const riskEmotions = ['sad', 'angry', 'fear'];
+
+  function setIcon(id, iconName, pulse = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<span class="live-icon ${pulse ? 'pulse' : ''}"><i data-lucide="${iconName}"></i></span>`;
+    if (window.lucide) {
+      lucide.createIcons({
+        root: el,
+        attrs: { class: 'lucide-icon' }
+      });
+    }
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.innerText = value;
+  }
+
+  function formatAge(seconds) {
+    if (seconds === null || seconds === undefined) return '--';
+    if (seconds < 2) return 'just now';
+    if (seconds < 60) return `${seconds}s ago`;
+    return `${Math.floor(seconds / 60)}m ago`;
+  }
+
+  function refreshLiveFrame() {
+    const liveFeed = document.getElementById('live-feed');
+    if (!liveFeed) return;
+    liveFeed.style.opacity = '1';
+    liveFeed.src = "{{ url_for('static', filename='latest_capture.jpg') }}?t=" + Date.now();
+  }
+
+  function updateWatchStatus() {
+    fetch(`/api/live-status?child_id=${childId}`)
+      .then(response => response.json())
+      .then(data => {
+        const emotion = data.emotion && data.emotion !== 'Unknown' ? data.emotion : 'waiting';
+        const formattedEmotion = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+        const iconName = iconMap[emotion.toLowerCase()] || 'loader-2';
+        const isPulse = iconName === 'loader-2';
+        
+        // Extract missing variables from data
+        const isLive = data.is_live;
+        const lastSeen = formatAge(data.last_seen_seconds);
+        const confidence = data.confidence;
+
+        setIcon('emotion-emoji', iconName, isPulse);
+        setText('emotion-text', formattedEmotion);
+        setText('emotion-time', `Last seen: ${data.timestamp || '--:--'} (${lastSeen})`);
+        
+        // Handle loading-text class for various elements
+        const overlayTextEl = document.getElementById('overlay-text');
+        const overlayConfEl = document.getElementById('overlay-confidence');
+        const summaryEl = document.getElementById('summary-emotion');
+        const deviceConnEl = document.getElementById('device-connection');
+        const liveTextEl = document.getElementById('watch-live-text');
+
+        if (overlayTextEl) overlayTextEl.classList.toggle('loading-text', emotion === 'waiting');
+        if (overlayConfEl) overlayConfEl.classList.toggle('loading-text', !confidence);
+        if (summaryEl) summaryEl.classList.toggle('loading-text', !confidence);
+        if (deviceConnEl) deviceConnEl.classList.toggle('loading-text', !isLive);
+        if (liveTextEl) liveTextEl.classList.toggle('loading-text', !isLive);
+
+        setIcon('overlay-emoji', iconName, isPulse);
+        setText('overlay-text', formattedEmotion);
+        setText('overlay-confidence', confidence ? `Confidence ${confidence.toFixed(1)}%` : 'Confidence pending');
+        setText('summary-emotion', confidence ? `${formattedEmotion} detected by the watch at ${data.timestamp} with ${confidence.toFixed(1)}% confidence.` : 'Waiting for the next watch frame.');
+        setText('feed-freshness', isLive ? `Live · ${lastSeen}` : `Last frame · ${lastSeen}`);
+        setText('device-connection', isLive ? 'Live' : 'Waiting');
+        setText('device-last-frame', lastSeen);
+        setText('watch-live-text', isLive ? 'Watch live' : 'Waiting for watch');
+        setIcon('watch-face-emoji', isLive ? iconName : 'watch', false);
+
+        // Update GitHub Version Text
+        const ghEl = document.getElementById('github-version-text');
+        if (ghEl && data.version) {
+          ghEl.innerText = `v${data.version}`;
+          ghEl.classList.remove('loading-text');
+          if (data.version !== data.local_version) {
+            ghEl.style.color = 'var(--dash-amber)';
+            ghEl.title = 'New version available on GitHub';
+          } else {
+            ghEl.style.color = 'var(--dash-green)';
+            ghEl.title = 'Up to date with GitHub';
+          }
+        }
+
+
+        const pill = document.getElementById('watch-live-pill');
+        if (pill) pill.classList.toggle('offline', !isLive);
+
+        const emotionCard = document.getElementById('emotion-card');
+        if (emotionCard) {
+          emotionCard.classList.toggle('attention', riskEmotions.includes(emotion.toLowerCase()));
+        }
+
+        // Real Heart Rate & Battery updates
+        console.log("Watch Status Update:", data);
+        const hr = (data.heart_rate !== undefined && data.heart_rate !== null) ? data.heart_rate : '--';
+        const bat = (data.battery_level !== undefined && data.battery_level !== null) ? data.battery_level : '--';
+        
+        setText('heart-rate-value', hr);
+        setText('battery-value', bat);
+        
+        const batteryCard = document.getElementById('battery-card');
+        if (batteryCard && bat !== '--') {
+          const batInt = parseInt(bat);
+          batteryCard.classList.toggle('attention', batInt < 25);
+          setText('battery-hint', batInt < 25 ? 'Low battery' : 'Ready for the day');
+        }
+      })
+      .catch(() => {
+        setText('watch-live-text', 'Watch offline');
+        setText('device-connection', 'Offline');
+        const pill = document.getElementById('watch-live-pill');
+        if (pill) pill.classList.add('offline');
+      });
+  }
+
+  function toggleWatchLock() {
+    const isLocked = document.getElementById('lockWatchSwitch').checked;
+    const childId = {{ active_child.id }};
+    
+    fetch(`/api/toggle-lock/${childId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log("Watch lock status updated:", data.is_locked);
+      } else {
+        document.getElementById('lockWatchSwitch').checked = !isLocked;
+        alert("Failed to update lock status: " + (data.error || "Unknown error"));
+      }
+    })
+    .catch(error => {
+      document.getElementById('lockWatchSwitch').checked = !isLocked;
+      console.error("Error toggling lock:", error);
+    });
+  }
+
+  function filterHistory() {
+    const query = document.getElementById('historySearch').value.toLowerCase();
+    const type = document.getElementById('historyFilterType').value;
+    const rows = document.querySelectorAll('.history-row');
+
+    rows.forEach(row => {
+      const searchText = row.getAttribute('data-search').toLowerCase();
+      const hr = parseInt(row.getAttribute('data-hr'));
+      const battery = parseInt(row.getAttribute('data-battery'));
+      
+      let matchesSearch = searchText.includes(query);
+      let matchesType = true;
+
+      if (type === 'low-battery') {
+        matchesType = battery < 25;
+      } else if (type === 'high-hr') {
+        matchesType = hr > 100;
+      }
+
+      row.style.display = (matchesSearch && matchesType) ? '' : 'none';
+    });
+  }
+
+  function resetHistoryFilters() {
+    document.getElementById('historySearch').value = '';
+    document.getElementById('historyFilterType').value = 'all';
+    filterHistory();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    refreshLiveFrame();
+    updateWatchStatus();
+    setInterval(refreshLiveFrame, 2500);
+    setInterval(updateWatchStatus, 2500);
+
+    if (window.gsap) {
+      // Simplified animation to avoid opacity issues in hidden tabs
+      gsap.from('.stat-card, .metric-card', {
+        duration: 0.6,
+        y: 15,
+        opacity: 0,
+        stagger: 0.08,
+        ease: 'power3.out',
+        clearProps: "all"
+      });
+      // Ensure all potential panels are visible immediately
+      gsap.set('.panel, .card, .tab-pane', { opacity: 1, visibility: 'visible' });
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}

@@ -3,316 +3,600 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-radius: 16px;
   }
   
-  .location-header {
-    margin-bottom: 30px;
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Preview Frame Logic */
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 20px auto 48px;
+    padding: 10px !important;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  .tool-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 20px 15px 120px;
+  }
+
+  body.dashboard-mobile-preview .tool-shell {
+    width: 100%;
+    padding: 20px 10px 100px;
+    max-height: 804px;
+    overflow-y: auto;
+  }
+
+  /* Force stacking in mobile preview regardless of screen size */
+  body.dashboard-mobile-preview .row {
+    flex-direction: column !important;
   }
   
-  .location-header h2 {
-    color: var(--text-dark);
-    font-weight: 700;
-    margin-bottom: 5px;
+  body.dashboard-mobile-preview .col-lg-8,
+  body.dashboard-mobile-preview .col-lg-4,
+  body.dashboard-mobile-preview .col-md-6 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.dashboard-mobile-preview .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-direction: column !important;
+  }
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
   }
   
-  .card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  .location-card {
+    background: var(--dash-panel);
+    border-radius: 24px;
+    padding: 32px;
+    border: 1px solid var(--dash-line);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(20px);
+    margin-bottom: 24px;
   }
-  
-  .card-header {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    color: white;
-    border-radius: 15px 15px 0 0 !important;
-    font-weight: 600;
-    padding: 15px 20px;
-  }
-  
-  #map {
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  .status-badge {
-    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
-    color: white;
-    padding: 8px 16px;
+
+  body.dashboard-mobile-preview .location-card {
+    padding: 20px 15px;
+    margin-bottom: 16px;
     border-radius: 20px;
-    display: inline-block;
-    font-weight: 600;
   }
-  
-  .zone-item {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    border-left: 4px solid var(--primary-medium);
+
+  .location-header {
+    margin-bottom: 32px;
+    text-align: center;
   }
-  
-  .zone-item h6 {
-    color: var(--text-dark);
-    font-weight: 700;
+
+  .location-header h2 {
+    font-size: 1.8rem;
+    font-weight: 850;
+    color: var(--dash-ink);
+    letter-spacing: -0.02em;
     margin-bottom: 8px;
   }
-  
-  .zone-item small {
-    color: var(--text-light);
-    display: block;
-    margin-bottom: 4px;
-  }
-  
-  .btn-delete-zone {
-    background: #ff6b6b;
-    border: none;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .btn-delete-zone:hover {
-    background: #ff5252;
-    transform: scale(1.05);
-  }
-  
-  .form-group {
+
+  body.dashboard-mobile-preview .location-header {
     margin-bottom: 20px;
   }
-  
-  .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 8px;
-    display: block;
+
+  body.dashboard-mobile-preview .location-header h2 {
+    font-size: 1.4rem;
+  }
+
+  body.dashboard-mobile-preview .location-header p {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  body.dashboard-mobile-preview .location-header .live-icon i {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  #map {
+    border-radius: 20px;
+    border: 1px solid var(--dash-line);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    height: 500px;
+  }
+
+  @media (max-width: 768px) {
+    #map {
+      height: 300px !important;
+    }
+  }
+
+  .status-pulse {
+    width: 12px;
+    height: 12px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    flex-shrink: 0;
   }
   
-  .form-control {
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+  .status-widget .h5 {
+    font-size: 1.1rem;
+    line-height: 1.2;
   }
-  
-  .form-control:focus {
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
-    outline: none;
+
+  body.dashboard-mobile-preview h5,
+  body.dashboard-mobile-preview h6 {
+    margin-bottom: 16px !important;
   }
-  
-  .btn-add {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    border: none;
-    color: white;
+
+  .map-fallback {
+    background: #f8fbff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--dash-muted);
+    cursor: crosshair;
+  }
+
+  .status-widget {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 22px;
+    padding: 24px;
+    border: 1px solid var(--dash-line);
+    margin-bottom: 24px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  }
+
+  body.dashboard-mobile-preview .status-widget {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .zone-item {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid var(--dash-line);
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .zone-item:hover {
+    transform: translateX(4px);
+    border-color: var(--dash-primary);
+  }
+
+  body.dashboard-mobile-preview .zone-item {
     padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    width: 100%;
-    transition: all 0.3s ease;
-    cursor: pointer;
   }
-  
-  .btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white;
+
+  body.dashboard-mobile-preview .zone-item .d-flex {
+    gap: 8px;
   }
-  
+
   .btn-geo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     background: #6366f1;
-    border: none;
     color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    border: 0;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    width: 100%;
+    margin-bottom: 24px;
+    transition: all 0.2s ease;
   }
-  
+
   .btn-geo:hover {
     background: #4f46e5;
     transform: translateY(-2px);
   }
-  
-  .location-info {
-    background: #f0f8ff;
-    border-left: 4px solid var(--primary-medium);
-    padding: 15px;
+
+  .btn-add {
+    background: var(--dash-primary);
+    color: white;
+    border: 0;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-add:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 0;
+    padding: 6px 12px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-delete:hover {
+    background: #ef4444;
+    color: white;
+  }
+
+  .form-label {
+    font-weight: 700;
+    color: var(--dash-ink);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-control {
+    border: 1.5px solid var(--dash-line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: #f8fbff;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+  }
+
+  .form-control:focus {
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    background: #fff;
+  }
+
+  .fallback-zone {
+    display: inline-block;
+    background: var(--dash-line);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin: 4px;
+    color: var(--dash-primary);
+    font-weight: 700;
+  }
+  @keyframes pulse-opacity {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .pulse-anim {
+    animation: pulse-opacity 1.5s infinite ease-in-out;
+  }
+
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .spin {
+    animation: rotate 2s linear infinite;
+    display: inline-block;
   }
 </style>
 
-<div class="container-fluid py-4">
-  <div class="location-header">
-    <h2>📍 Safe Zones & Location Tracking</h2>
-    <p class="text-muted">Manage safe zones for {{ child.name }}</p>
-  </div>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <div class="row">
-    <!-- Map Column -->
-    <div class="col-lg-8 mb-4">
-      <div class="card">
-        <div class="card-header">
-          🗺️ Safe Zones Map
-        </div>
-        <div class="card-body p-0">
-          <div id="map" style="width: 100%; height: 500px;"></div>
-        </div>
+<div class="dashboard-preview-frame" data-child-id="{{ child.id }}">
+  <div class="tool-shell">
+    <div class="preview-toolbar" aria-label="Locations preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active">Desktop</button>
+        <button type="button" id="mobile-preview-btn">Mobile</button>
       </div>
     </div>
 
-    <!-- Sidebar Column -->
-    <div class="col-lg-4">
-      <!-- Current Status -->
-      <div class="card mb-4">
-        <div class="card-header">Current Status</div>
-        <div class="card-body">
-          <div class="location-info">
-            <p class="mb-2"><strong>Status:</strong></p>
-            <div class="status-badge">🛡️ Safe</div>
+    <div class="location-header">
+      <div class="mb-2">
+        <span class="live-icon"><i data-lucide="map-pin" style="width: 48px; height: 48px; color: var(--dash-primary);"></i></span>
+      </div>
+      <h2>Safe Zones & Tracking</h2>
+      <p class="text-muted">Geofencing for {{ child.name }}</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
           </div>
-          <div class="location-info">
-            <p class="mb-0"><strong>Battery:</strong> 85%</p>
-            <p class="mb-0"><strong>Last Update:</strong> Just now</p>
-          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+      <div class="col-12 col-lg-8">
+        <div class="location-card">
+          <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="map" style="width: 20px; height: 20px; color: var(--dash-primary);"></i>
+            Interactive Map
+          </h5>
+          <div id="map"></div>
         </div>
       </div>
 
-      <!-- Safe Zones List -->
-      <div class="card mb-4">
-        <div class="card-header">Safe Zones</div>
-        <div class="card-body">
+      <div class="col-12 col-lg-4">
+        <!-- Status Widget -->
+        <div class="status-widget">
+          <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="activity" style="width: 18px; height: 18px; color: #22c55e;"></i>
+            Live Status
+          </h6>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="status-pulse" style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);"></div>
+            <div class="fw-bold h5 mb-0" style="color: #22c55e; font-size: 1.1rem;">
+              {% if child.current_lat %}
+                Active Online
+              {% else %}
+                Last Seen Offline
+              {% endif %}
+            </div>
+          </div>
+          <div class="list-stack">
+            <div class="d-flex align-items-center gap-2 text-muted small mb-2">
+              <i data-lucide="battery" style="width: 16px; height: 16px;"></i>
+              <span>Battery: 85%</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+              <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+              <span>Last Seen: {{ child.last_location_update.strftime('%H:%M:%S') if child.last_location_update else 'Never' }}</span>
+            </div>
+          </div>
+          <button id="locate_watch_btn" class="btn btn-primary w-100 mt-2 d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; font-weight: 700; background: var(--dash-primary);">
+            <i data-lucide="crosshair" style="width: 18px; height: 18px;"></i>
+            Locate Watch
+          </button>
+        </div>
+
+        <!-- Zones List -->
+        <div class="location-card">
+          <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="list" style="width: 18px; height: 18px; color: var(--dash-primary);"></i>
+            Saved Zones
+          </h6>
           {% if child.locations %}
-            <div class="zones-list">
+            <div class="zone-stack">
               {% for loc in child.locations %}
                 <div class="zone-item">
-                  <h6>📍 {{ loc.name }}</h6>
-                  <small>Latitude: {{ "%.4f"|format(loc.latitude) }}</small>
-                  <small>Longitude: {{ "%.4f"|format(loc.longitude) }}</small>
-                  <small>Radius: <strong>{{ loc.radius }} m</strong></small>
-                  <div class="mt-2">
-                    <form method="post" style="display:inline;">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <span class="fw-bold d-block mb-1">{{ loc.name }}</span>
+                      <span class="text-muted small"><i data-lucide="maximize" class="me-1" style="width: 12px;"></i> {{ loc.radius }}m radius</span>
+                    </div>
+                    <form method="post" class="m-0" data-confirm-animated>
                       <input type="hidden" name="action" value="delete_location">
                       <input type="hidden" name="location_id" value="{{ loc.id }}">
-                      <button type="submit" class="btn btn-delete-zone" onclick="return confirm('Delete this zone?')">Delete</button>
+                      <button type="submit" class="btn-delete">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                      </button>
                     </form>
                   </div>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <p class="text-muted text-center py-3">No safe zones configured yet</p>
+            <div class="text-center py-5 opacity-50">
+              <i data-lucide="map-pin-off" class="mb-2" style="width: 48px; height: 48px;"></i>
+              <p class="small mb-0">No zones yet</p>
+            </div>
           {% endif %}
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Add Safe Zone Form -->
-  <div class="card mt-4">
-    <div class="card-header">
-      ➕ Add New Safe Zone
-    </div>
-    <div class="card-body">
+    <!-- Add Zone Form -->
+    <div class="location-card">
+      <h5 class="fw-bold mb-4">Add New Safe Zone</h5>
       <form method="post">
         <input type="hidden" name="action" value="add_location">
         
         <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label class="form-label">Zone Name</label>
-              <input type="text" class="form-control" name="name" placeholder="e.g., Home, School" required>
-            </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Zone Name</label>
+            <input type="text" class="form-control" name="name" placeholder="e.g., Home, School" required>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label class="form-label">Radius (meters)</label>
-              <input type="number" class="form-control" name="radius" placeholder="e.g., 500" value="500" required>
-            </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Radius (meters)</label>
+            <input type="number" class="form-control" name="radius" placeholder="500" value="500" min="50" max="5000" required>
           </div>
         </div>
 
         <div class="row">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label class="form-label">Latitude</label>
-              <input type="number" step="0.000001" class="form-control" name="latitude" id="latitude_input" placeholder="Click on map or enter" required>
-            </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Latitude</label>
+            <input type="number" step="0.000001" class="form-control" name="latitude" id="latitude_input" placeholder="Click on map" min="-90" max="90" required>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label class="form-label">Longitude</label>
-              <input type="number" step="0.000001" class="form-control" name="longitude" id="longitude_input" placeholder="Click on map or enter" required>
-            </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Longitude</label>
+            <input type="number" step="0.000001" class="form-control" name="longitude" id="longitude_input" placeholder="Click on map" min="-180" max="180" required>
           </div>
         </div>
 
-        <div class="mb-3">
-          <button type="button" class="btn btn-geo" id="geo_btn">📍 Use My Current Location</button>
-        </div>
+        <button type="button" class="btn-geo" id="geo_btn">
+          <i data-lucide="crosshair"></i>
+          Use My Current Location
+        </button>
 
-        <button type="submit" class="btn btn-add">Add Safe Zone</button>
+        <button type="submit" class="btn-add">Create Safe Zone</button>
       </form>
     </div>
   </div>
-
-  <div class="mt-4">
-    <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
-  </div>
 </div>
 
-<script src="https://maps.googleapis.com/maps/api/js?key={{ config.GOOGLE_MAPS_API_KEY }}"></script>
 <script>
   let map;
   let selectedMarker = null;
   const childId = {{ child.id }};
+  const locations = {{ locations_json | tojson | safe }};
+
+  function setCoordinates(lat, lng) {
+    document.getElementById('latitude_input').value = lat.toFixed(6);
+    document.getElementById('longitude_input').value = lng.toFixed(6);
+  }
+
+  function renderFallbackMap(reason) {
+    const mapEl = document.getElementById('map');
+    const zoneList = locations.length
+      ? `<div class="fallback-zones mt-3">${locations.map(loc => `<span class="fallback-zone">${loc.name} · ${Number(loc.radius || 0).toFixed(0)}m</span>`).join('')}</div>`
+      : '<p class="mt-2 small">No safe zones configured yet.</p>';
+
+    mapEl.className = 'map-fallback';
+    mapEl.innerHTML = `
+      <div class="mb-2"><i data-lucide="map-off" style="width: 48px; height: 48px; opacity: 0.2;"></i></div>
+      <strong class="text-dark">Map Preview Unavailable</strong>
+      <p class="small mb-2">${reason}</p>
+      ${zoneList}
+      <p class="mt-3 small fw-bold">Tip: Click anywhere here to simulate coordinates.</p>
+    `;
+    
+    if (window.lucide) lucide.createIcons({ root: mapEl });
+
+    mapEl.addEventListener('click', event => {
+      const rect = mapEl.getBoundingClientRect();
+      const xRatio = (event.clientX - rect.left) / rect.width;
+      const yRatio = (event.clientY - rect.top) / rect.height;
+      const lat = 30.0444 + (0.04 - yRatio * 0.08);
+      const lng = 31.2357 + (xRatio * 0.08 - 0.04);
+      setCoordinates(lat, lng);
+    });
+  }
   
   function initMap() {
-    const defaultCenter = { lat: 30.0444, lng: 31.2357 }; // Cairo, Egypt
+    if (!window.google || !window.google.maps) {
+      renderFallbackMap('Google Maps script did not load correctly.');
+      return;
+    }
+
+    const defaultCenter = { lat: 30.0444, lng: 31.2357 };
     map = new google.maps.Map(document.getElementById('map'), {
       zoom: 13,
-      center: defaultCenter
+      center: defaultCenter,
+      styles: [
+        { "featureType": "all", "elementType": "geometry.fill", "stylers": [{ "weight": "2.00" }] },
+        { "featureType": "all", "elementType": "geometry.stroke", "stylers": [{ "color": "#9c9c9c" }] },
+        { "featureType": "all", "elementType": "labels.text", "stylers": [{ "visibility": "on" }] },
+        { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2f2f2" }] },
+        { "featureType": "landscape", "elementType": "geometry.fill", "stylers": [{ "color": "#ffffff" }] },
+        { "featureType": "poi", "elementType": "all", "stylers": [{ "visibility": "off" }] },
+        { "featureType": "road", "elementType": "all", "stylers": [{ "saturation": -100 }, { "lightness": 45 }] },
+        { "featureType": "road.highway", "elementType": "all", "stylers": [{ "visibility": "simplified" }] },
+        { "featureType": "road.arterial", "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
+        { "featureType": "transit", "elementType": "all", "stylers": [{ "visibility": "off" }] },
+        { "featureType": "water", "elementType": "all", "stylers": [{ "color": "#46bcec" }, { "visibility": "on" }] },
+        { "featureType": "water", "elementType": "geometry.fill", "stylers": [{ "color": "#c5e1f5" }] }
+      ]
     });
 
-    // Load existing locations
-    const locations = {{ child.locations | tojson | safe }};
+    // Add live watch location marker if available
+    const watchLat = {{ child.current_lat if child.current_lat else 'null' }};
+    const watchLng = {{ child.current_lng if child.current_lng else 'null' }};
+    
+    if (watchLat && watchLng) {
+      const watchPos = { lat: watchLat, lng: watchLng };
+      new google.maps.Marker({
+        map: map,
+        position: watchPos,
+        title: 'Watch Location ({{ child.name }})',
+        icon: {
+          url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        }
+      });
+      map.setCenter(watchPos);
+    }
+
     locations.forEach(loc => {
       const circleCenter = { lat: loc.latitude, lng: loc.longitude };
-      
-      // Draw circle
       new google.maps.Circle({
         map: map,
         center: circleCenter,
         radius: loc.radius,
-        fillColor: '#5faee9',
-        fillOpacity: 0.25,
-        strokeColor: '#5faee9',
+        fillColor: '#2563eb',
+        fillOpacity: 0.15,
+        strokeColor: '#2563eb',
         strokeWeight: 2,
       });
-      
-      // Draw marker
       new google.maps.Marker({
         map: map,
         position: circleCenter,
@@ -320,49 +604,132 @@
       });
     });
 
-    // Click on map to set coordinates
     map.addListener('click', (e) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      
-      document.getElementById('latitude_input').value = lat.toFixed(6);
-      document.getElementById('longitude_input').value = lng.toFixed(6);
-      
+      setCoordinates(lat, lng);
       if (selectedMarker) selectedMarker.setMap(null);
-      
       selectedMarker = new google.maps.Marker({
         map: map,
         position: { lat: lat, lng: lng },
-        title: 'Selected Location',
+        title: 'Selected Point',
       });
     });
   }
+
+  let watchMarker = null;
+
+  function updateWatchMarker() {
+    fetch(`/api/live-status?child_id=${childId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.current_lat && data.current_lng) {
+          const watchPos = { lat: data.current_lat, lng: data.current_lng };
+          
+          if (!watchMarker) {
+            watchMarker = new google.maps.Marker({
+              map: map,
+              position: watchPos,
+              title: `Watch Location (${data.name || 'Child'})`,
+              icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+              }
+            });
+          } else {
+            watchMarker.setPosition(watchPos);
+          }
+          
+          // Update status text
+          const statusText = document.querySelector('.status-widget .h5');
+          if (statusText) {
+            statusText.textContent = data.is_live ? 'Active Online' : 'Last Seen Offline';
+            statusText.style.color = data.is_live ? '#22c55e' : '#667085';
+          }
+          const batteryText = document.querySelector('.status-widget .list-stack div:first-child span');
+          if (batteryText) batteryText.textContent = `Battery: ${data.battery_level}%`;
+        }
+      });
+  }
+
+  document.getElementById('locate_watch_btn').addEventListener('click', () => {
+    const btn = document.getElementById('locate_watch_btn');
+    const originalText = btn.innerHTML;
+
+    if (watchMarker) {
+      map.setCenter(watchMarker.getPosition());
+      map.setZoom(17);
+      
+      // Visual feedback
+      btn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px;"></i> Located!';
+      btn.classList.replace('btn-primary', 'btn-success');
+      lucide.createIcons();
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.replace('btn-success', 'btn-primary');
+        lucide.createIcons();
+      }, 2000);
+    } else {
+      // Animated status feedback
+      btn.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px; height: 18px;"></i> Waiting for sync...';
+      btn.classList.add('pulse-anim');
+      
+      // Create or update a status message below the button
+      let statusMsg = document.getElementById('watch-locate-status');
+      if (!statusMsg) {
+        statusMsg = document.createElement('div');
+        statusMsg.id = 'watch-locate-status';
+        statusMsg.style.cssText = 'margin-top: 8px; font-size: 0.85rem; color: #dc2626; font-style: italic; font-weight: 600; text-align: center;';
+        btn.parentNode.appendChild(statusMsg);
+      }
+      statusMsg.innerHTML = '<span class="pulse-anim">Watch location not available yet. Please wait for the first sync.</span>';
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('pulse-anim');
+        if (statusMsg) statusMsg.innerHTML = '';
+        lucide.createIcons();
+      }, 4000);
+    }
+  });
 
   document.getElementById('geo_btn').addEventListener('click', () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
-        document.getElementById('latitude_input').value = lat.toFixed(6);
-        document.getElementById('longitude_input').value = lng.toFixed(6);
-        
-        const userLocation = { lat: lat, lng: lng };
-        map.panTo(userLocation);
-        map.setZoom(15);
-        
-        if (selectedMarker) selectedMarker.setMap(null);
-        selectedMarker = new google.maps.Marker({
-          map: map,
-          position: userLocation,
-          title: 'Your Location',
-        });
+        setCoordinates(lat, lng);
+        if (map && window.google && window.google.maps) {
+          const userLocation = { lat: lat, lng: lng };
+          map.panTo(userLocation);
+          map.setZoom(15);
+          if (selectedMarker) selectedMarker.setMap(null);
+          selectedMarker = new google.maps.Marker({
+            map: map,
+            position: userLocation,
+            title: 'Current Position',
+          });
+        }
       });
     }
   });
 
-  // Initialize map when page loads
-  document.addEventListener('DOMContentLoaded', initMap);
+  window.gm_authFailure = function() {
+    renderFallbackMap('Google Maps API Error: Your API key is either invalid or the Maps JavaScript API is not enabled in your Google Cloud Console.');
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDs0vIRVVFGpK_tFZGWpQkyRMjSAKWWdGc';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      initMap();
+      setInterval(updateWatchMarker, 5000);
+    };
+    script.onerror = () => renderFallbackMap('Check internet connection or API key status.');
+    document.head.appendChild(script);
+  });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

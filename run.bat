@@ -1,3 +1,5 @@
 @echo off
-cd /d "c:\Users\hp\Downloads\New folder"
-".\.venv\Scripts\python.exe" app.py
+cd /d "%~dp0"
+call .\.venv\Scripts\activate.bat
+python app.py
+pause

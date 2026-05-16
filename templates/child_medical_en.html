@@ -3,311 +3,419 @@
 {% block content %}
 <style>
   :root {
-    --primary-light: #a8d8ff;
-    --primary-medium: #5faee9;
-    --primary-dark: #5b7fa3;
-    --accent-pink: #ffb3d9;
-    --text-dark: #333;
-    --text-light: #666;
+    --dash-ink: #172033;
+    --dash-muted: #667085;
+    --dash-panel: rgba(255, 255, 255, 0.92);
+    --dash-line: rgba(37, 99, 235, 0.14);
+    --dash-primary: #2563eb;
+    --dash-radius: 16px;
   }
   
-  .medical-header {
-    margin-bottom: 30px;
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(8, 145, 178, 0.24), transparent 30%),
+      radial-gradient(circle at 95% 12%, rgba(219, 39, 119, 0.16), transparent 28%),
+      linear-gradient(135deg, #eef7ff 0%, #f8fbff 47%, #fff5fb 100%) !important;
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Preview Frame Logic */
+  .dashboard-preview-frame {
+    width: 100%;
+    transition: width 0.25s ease, padding 0.25s ease;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame {
+    width: min(430px, calc(100vw - 24px));
+    min-height: 844px;
+    margin: 20px auto 48px;
+    padding: 10px !important;
+    border: 10px solid #111827;
+    border-radius: 38px;
+    background: #f8fbff;
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+  }
+
+  body.dashboard-mobile-preview .dashboard-preview-frame::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    width: 128px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: #111827;
+  }
+
+  .tool-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 20px 15px 120px;
+  }
+
+  body.dashboard-mobile-preview .tool-shell {
+    width: 100%;
+    padding: 20px 10px 100px;
+    max-height: 804px;
+    overflow-y: auto;
+  }
+
+  /* Force stacking in mobile preview regardless of screen size */
+  body.dashboard-mobile-preview .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    flex-direction: column !important;
   }
   
-  .medical-header h2 {
-    color: var(--text-dark);
-    font-weight: 700;
-    margin-bottom: 5px;
+  body.dashboard-mobile-preview .col-lg-6,
+  body.dashboard-mobile-preview .col-md-6 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
-  
-  .medical-header p {
-    color: var(--text-light);
+
+  .preview-toolbar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
   }
-  
-  .card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-    margin-bottom: 25px;
+
+  .preview-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dash-line);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
   }
-  
-  .card-header {
-    border-radius: 15px 15px 0 0 !important;
-    color: white;
-    font-weight: 600;
-    padding: 15px 20px;
-  }
-  
-  .card-header.disease-header {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  }
-  
-  .card-header.medication-header {
-    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
-  }
-  
-  .card-header.add-header {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-  }
-  
-  .list-group-item {
-    border: none;
-    padding: 15px 0;
-    border-bottom: 1px solid #f0f0f0;
-    transition: all 0.3s ease;
-  }
-  
-  .list-group-item:last-child {
-    border-bottom: none;
-  }
-  
-  .list-group-item:hover {
-    background: #f8f9fa;
+
+  .preview-toggle button {
+    min-width: 92px;
+    min-height: 34px;
+    border: 0;
     border-radius: 8px;
-    padding-left: 10px;
+    background: transparent;
+    color: var(--dash-muted);
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .preview-toggle button.active {
+    background: var(--dash-primary);
+    color: #fff;
   }
   
-  .form-group {
+  .medical-card {
+    background: var(--dash-panel);
+    border-radius: 24px;
+    padding: 32px;
+    border: 1px solid var(--dash-line);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(20px);
+    margin-bottom: 24px;
+  }
+
+  body.dashboard-mobile-preview .medical-card {
+    padding: 20px 15px;
+    margin-bottom: 16px;
+    border-radius: 20px;
+  }
+
+  .medical-header {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .medical-header h2 {
+    font-size: 1.8rem;
+    font-weight: 850;
+    color: var(--dash-ink);
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  body.dashboard-mobile-preview .medical-header {
     margin-bottom: 20px;
   }
-  
+
+  body.dashboard-mobile-preview .medical-header h2 {
+    font-size: 1.4rem;
+  }
+
+  body.dashboard-mobile-preview .medical-header p {
+    font-size: 0.9rem;
+  }
+
+  body.dashboard-mobile-preview .medical-header .live-icon i {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .medical-item {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid var(--dash-line);
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .medical-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.06);
+  }
+
+  body.dashboard-mobile-preview .medical-item {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .item-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  .badge-disease { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  .badge-med { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+
+  .btn-add {
+    background: var(--dash-primary);
+    color: white;
+    border: 0;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 800;
+    width: 100%;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  }
+
+  .btn-add:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 0;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-delete:hover {
+    background: #ef4444;
+    color: white;
+  }
+
   .form-label {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--dash-ink);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
     display: block;
   }
-  
-  .form-control,
-  .form-select {
-    border: 2px solid #e0e0e0;
+
+  .form-control, .form-select {
+    border: 1.5px solid var(--dash-line);
     border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    padding: 10px 14px;
+    background: #f8fbff;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
   }
-  
-  .form-control:focus,
-  .form-select:focus {
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(95, 174, 233, 0.1);
-    outline: none;
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--dash-primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    background: #fff;
   }
-  
-  .btn-add {
-    background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 600;
-    width: 100%;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(95, 174, 233, 0.4);
-    color: white;
-  }
-  
-  .btn-delete {
-    background: #ff6b6b;
-    border: none;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
-  
-  .btn-delete:hover {
-    background: #ff5252;
-    transform: scale(1.05);
-  }
-  
-  .disease-info,
-  .medication-info {
-    background: #f8f9fa;
-    border-left: 4px solid;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-  }
-  
-  .disease-info {
-    border-left-color: #ff6b6b;
-  }
-  
-  .medication-info {
-    border-left-color: #51cf66;
-  }
-  
-  .empty-state {
+
+  .empty-box {
     text-align: center;
-    padding: 30px 20px;
-    color: var(--text-light);
-  }
-  
-  .empty-state-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
+    padding: 40px 20px;
+    opacity: 0.5;
   }
 </style>
 
-<div class="container-fluid py-4">
-  <div class="medical-header">
-    <h2>Medical Records for {{ child.name }}</h2>
-    <p class="text-muted">Manage diseases and medications</p>
-  </div>
+<div class="dashboard-preview-frame" data-child-id="{{ child.id }}">
+  <div class="tool-shell">
+    <div class="preview-toolbar" aria-label="Medical preview mode">
+      <div class="preview-toggle">
+        <button type="button" id="desktop-preview-btn" class="active">Desktop</button>
+        <button type="button" id="mobile-preview-btn">Mobile</button>
+      </div>
+    </div>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+    <div class="medical-header">
+      <div class="mb-2">
+        <span class="live-icon"><i data-lucide="heart-pulse" style="width: 48px; height: 48px; color: #ef4444;"></i></span>
+      </div>
+      <h2>Care Plan</h2>
+      <p class="text-muted">Health records for {{ child.name }}</p>
+    </div>
 
-  <div class="row">
-    <!-- Diseases Column -->
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header disease-header">
-          🦠 Diseases
-        </div>
-        <div class="card-body">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row">
+      <!-- Diseases -->
+      <div class="col-lg-6 mb-4">
+        <div class="medical-card h-100">
+          <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="activity" style="color: #ef4444;"></i>
+            Diseases & Conditions
+          </h5>
+          
           {% if child.diseases %}
-            <div class="disease-list">
-              {% for disease in child.diseases %}
-                <div class="disease-info">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                      <h6 class="mb-1 fw-bold text-dark">{{ disease.name }}</h6>
-                      {% if disease.description %}
-                        <p class="small text-muted mb-0">{{ disease.description }}</p>
-                      {% endif %}
+            {% for disease in child.diseases %}
+              <div class="medical-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="item-badge badge-disease">
+                      <i data-lucide="alert-circle" style="width: 14px; height: 14px;"></i>
+                      Active
                     </div>
-                    <form method="post" style="display:inline;">
-                      <input type="hidden" name="action" value="delete_disease">
-                      <input type="hidden" name="disease_id" value="{{ disease.id }}">
-                      <button type="submit" class="btn btn-delete" onclick="return confirm('Delete this disease?')">Delete</button>
-                    </form>
+                    <h6 class="fw-bold mb-1">{{ disease.name }}</h6>
+                    {% if disease.description %}
+                      <p class="small text-muted mb-0">{{ disease.description }}</p>
+                    {% endif %}
                   </div>
+                  <form method="post" class="ms-2" data-confirm-animated>
+                    <input type="hidden" name="action" value="delete_disease">
+                    <input type="hidden" name="disease_id" value="{{ disease.id }}">
+                    <button type="submit" class="btn-delete">Remove</button>
+                  </form>
                 </div>
-              {% endfor %}
-            </div>
+              </div>
+            {% endfor %}
           {% else %}
-            <div class="empty-state">
-              <div class="empty-state-icon">✓</div>
-              <p>No diseases recorded</p>
+            <div class="empty-box">
+              <i data-lucide="shield-check" class="mb-2" style="width: 48px; height: 48px;"></i>
+              <p class="small">No active conditions recorded.</p>
             </div>
           {% endif %}
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header add-header">
-          ➕ Add New Disease
-        </div>
-        <div class="card-body">
+          <hr class="my-4 opacity-10">
+          
+          <h6 class="fw-bold mb-3">Add Condition</h6>
           <form method="post">
             <input type="hidden" name="action" value="add_disease">
-            <div class="form-group">
-              <label class="form-label">Disease Name</label>
+            <div class="mb-3">
+              <label class="form-label">Name</label>
               <input type="text" class="form-control" name="disease_name" placeholder="e.g., Asthma" required>
             </div>
-            <div class="form-group">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" name="description" placeholder="Describe the condition..." rows="2"></textarea>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" name="description" placeholder="Optional details..." rows="2" required></textarea>
             </div>
-            <button type="submit" class="btn btn-add">Add Disease</button>
+            <button type="submit" class="btn-add">Add Condition</button>
           </form>
         </div>
       </div>
-    </div>
 
-    <!-- Medications Column -->
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header medication-header">
-          💊 Medications
-        </div>
-        <div class="card-body">
+      <!-- Medications -->
+      <div class="col-lg-6 mb-4">
+        <div class="medical-card h-100">
+          <h5 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i data-lucide="pill" style="color: #22c55e;"></i>
+            Current Medications
+          </h5>
+          
           {% if child.medications %}
-            <div class="medication-list">
-              {% for med in child.medications %}
-                <div class="medication-info">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                      <h6 class="mb-2 fw-bold text-dark">{{ med.name }}</h6>
-                      <div class="small text-muted">
-                        {% if med.dosage %}<div>💉 Dosage: <strong>{{ med.dosage }}</strong></div>{% endif %}
-                        {% if med.frequency %}<div>⏱️ Frequency: <strong>{{ med.frequency }}</strong></div>{% endif %}
-                        {% if med.duration_days %}<div>📅 Duration: <strong>{{ med.duration_days }} days</strong></div>{% endif %}
-                        {% if med.schedule_time %}<div>🕐 Time: <strong>{{ med.schedule_time }}</strong></div>{% endif %}
-                      </div>
+            {% for med in child.medications %}
+              <div class="medical-item">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="item-badge badge-med">
+                      <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                      Scheduled
                     </div>
-                    <form method="post" style="display:inline;">
-                      <input type="hidden" name="action" value="delete_medication">
-                      <input type="hidden" name="med_id" value="{{ med.id }}">
-                      <button type="submit" class="btn btn-delete" onclick="return confirm('Delete this medication?')">Delete</button>
-                    </form>
+                    <h6 class="fw-bold mb-2">{{ med.name }}</h6>
+                    <div class="small text-muted">
+                      {% if med.dosage %}<div class="mb-1"><strong>Dosage:</strong> {{ med.dosage }}</div>{% endif %}
+                      {% if med.frequency %}<div class="mb-1"><strong>Frequency:</strong> {{ med.frequency }}</div>{% endif %}
+                      {% if med.schedule_time %}<div class="mb-0"><strong>Next Dose:</strong> {{ med.schedule_time }}</div>{% endif %}
+                    </div>
                   </div>
+                  <form method="post" class="ms-2" data-confirm-animated>
+                    <input type="hidden" name="action" value="delete_medication">
+                    <input type="hidden" name="med_id" value="{{ med.id }}">
+                    <button type="submit" class="btn-delete">Remove</button>
+                  </form>
                 </div>
-              {% endfor %}
-            </div>
+              </div>
+            {% endfor %}
           {% else %}
-            <div class="empty-state">
-              <div class="empty-state-icon">✓</div>
-              <p>No medications recorded</p>
+            <div class="empty-box">
+              <i data-lucide="pill" class="mb-2" style="width: 48px; height: 48px;"></i>
+              <p class="small">No medications scheduled.</p>
             </div>
           {% endif %}
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header add-header">
-          ➕ Add New Medication
-        </div>
-        <div class="card-body">
+          <hr class="my-4 opacity-10">
+          
+          <h6 class="fw-bold mb-3">Add Medication</h6>
           <form method="post">
             <input type="hidden" name="action" value="add_medication">
-            <div class="form-group">
+            <div class="mb-3">
               <label class="form-label">Medication Name</label>
-              <input type="text" class="form-control" name="med_name" placeholder="e.g., Paracetamol" required>
+              <input type="text" class="form-control" name="med_name" required>
             </div>
-            <div class="form-group">
-              <label class="form-label">Dosage</label>
-              <input type="text" class="form-control" name="dosage" placeholder="e.g., 500mg">
+            <div class="row">
+              <div class="col-6 mb-3">
+                <label class="form-label">Dosage (Quantity)</label>
+                <input type="number" class="form-control" name="dosage" placeholder="e.g. 500" min="1" required>
+              </div>
+              <div class="col-6 mb-3">
+                <label class="form-label">Frequency</label>
+                <select class="form-select" name="frequency" required>
+                  <option value="Daily">Daily</option>
+                  <option value="Twice Daily">Twice Daily</option>
+                  <option value="Every 8 Hours">Every 8 Hours</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="As Needed">As Needed</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Frequency</label>
-              <input type="text" class="form-control" name="frequency" placeholder="e.g., Every 8 hours">
+            <div class="mb-3">
+              <label class="form-label">Time</label>
+              <input type="time" class="form-control" name="schedule_time" required>
             </div>
-            <div class="form-group">
-              <label class="form-label">Duration (Days)</label>
-              <input type="number" class="form-control" name="duration_days" placeholder="Number of days" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Schedule Time</label>
-              <input type="time" class="form-control" name="schedule_time">
-            </div>
-            <button type="submit" class="btn btn-add">Add Medication</button>
+            <button type="submit" class="btn-add">Schedule Medication</button>
           </form>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="mt-4">
-    <a href="{{ url_for('dashboard', child_id=child.id) }}" class="btn btn-outline-secondary">← Back to Dashboard</a>
   </div>
 </div>
 
